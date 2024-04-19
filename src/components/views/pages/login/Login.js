@@ -87,16 +87,14 @@ const Login = () => {
               <CCard className="p-4">
                 <CCardBody>
                   <CForm>
-                    <CRow>
+                    <CRow style={{display: 'flex', justifyContent: 'center'}}>
                       <CCol>
                         <img src={logo} alt='Logo'
                           style={{
                             padding: '5px',
                             width: '50px', height: '50px'
                           }} />
-                      </CCol>
-                      <CCol>
-                        <img src={logoname} alt='Company'
+                          <img src={logoname} alt='Company'
                           style={{
                             backgroundColor: 'white',
                             padding: '5px', borderRadius: '5px',
@@ -104,7 +102,7 @@ const Login = () => {
                           }} />
                       </CCol>
                     </CRow>
-                    <h3>Login</h3>
+                    {/* <h3>Login</h3> */}
                     <p className="text-body-secondary">Sign In to your account</p>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
@@ -133,18 +131,18 @@ const Login = () => {
                       />
                     </CInputGroup>
                     <CRow>
-                      <CCol xs={6}>
-                        <CButton color="primary" className="mx-4 px-4" onClick={handleLogin}>
+                      <CCol xs={12} style={{display: 'flex', justifyContent: 'center'}}>
+                        <CButton color="primary" className="px-4" onClick={handleLogin}>
                           Login
                         </CButton>
                       </CCol>
-                      <CCol xs={6}>
+                      {/* <CCol xs={6}>
                         <Link to="/register">
                           <CButton color="primary" className="mx-4 px-4">
                             Register
                           </CButton>
                         </Link>
-                      </CCol>
+                      </CCol> */}
                     </CRow>
                   </CForm>
                 </CCardBody>

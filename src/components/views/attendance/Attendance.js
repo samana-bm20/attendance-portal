@@ -99,7 +99,7 @@ const Attendance = () => {
       } else if (time === 'Absent') {
         return 'absent';
       } else {
-        if ((parseInt(time.split(':')[0]) === 9 && parseInt(time.split(':')[1]) >= 30) ||
+        if ((parseInt(time.split(':')[0]) === 9 && parseInt(time.split(':')[1]) >= 0) ||
           parseInt(time.split(':')[0]) > 9 ||
           time.split(':')[1].split(' ')[1] === 'PM') {
           return 'late';

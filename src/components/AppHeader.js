@@ -128,7 +128,7 @@ const AppHeader = () => {
         </CHeaderNav>
       </CContainer>
       <CContainer className="px-4" fluid>
-        <CHeaderNav className="d-md-down-none">Hello, {user?.name}</CHeaderNav>
+        <CHeaderNav className="d-md-down-none" style={{fontWeight: 'bold'}}>Hello, {user?.name}</CHeaderNav>
       </CContainer>
     </CHeader>
   )
