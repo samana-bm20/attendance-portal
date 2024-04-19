@@ -1,5 +1,5 @@
 const mainDomain = "http://localhost:3030";
-//const mainDomain = "http://sars.bmt.go.tz/";
+//const mainDomain = "http://sars.bmt.go.tz/"; //samana 
 
 const GetAccessToken = () => {
   const user = localStorage.getItem("user")
