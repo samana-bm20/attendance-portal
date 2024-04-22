@@ -225,7 +225,7 @@ const Monthly = () => {
             <CCardHeader>Monthly Record</CCardHeader>
             <CCardBody style={{maxHeight: '320px', overflowY: 'auto', textAlign: 'center'}}>
                 <CRow className='mb-4'>
-                    <CCol xl={3}>
+                    <CCol xs={6} sm={6} xl={3} style={{marginTop: '5px'}}>
                         <CDropdown>
                             <CDropdownToggle 
                             color="secondary" caret >
@@ -238,7 +238,7 @@ const Monthly = () => {
                             </CDropdownMenu>
                         </CDropdown>
                     </CCol>
-                    <CCol xl={4}>
+                    <CCol xs={6} sm={6} xl={9} style={{marginTop: '5px'}}>
                         <CButton color="success" onClick={handleMonthReport}>Generate</CButton>
                     </CCol>
                 </CRow>

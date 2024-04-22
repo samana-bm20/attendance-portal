@@ -254,7 +254,7 @@ const EmployeeAttendance = () => {
           </CCardHeader>
           <CCardBody>
             <CRow className='mb-4'>
-              <CCol xl={2}>
+              <CCol xs={6} sm={6} xl={3} style={{marginTop: '5px'}}>
                 <CDropdown>
                   <CDropdownToggle
                     color="secondary" caret >
@@ -267,7 +267,7 @@ const EmployeeAttendance = () => {
                   </CDropdownMenu>
                 </CDropdown>
               </CCol>
-              <CCol xl={6}>
+              <CCol xs={6} sm={6} xl={9} style={{marginTop: '5px'}}>
                 <CButton color="success" onClick={handleFullReport}>Generate</CButton>
               </CCol>
             </CRow>

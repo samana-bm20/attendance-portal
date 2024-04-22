@@ -148,7 +148,7 @@ const MainChart = () => {
   return (
     <>
       <CRow xs={{ gutter: 3 }}>
-        <CCol sm={6} xl={4} xxl={3}>
+        <CCol sm={6} xl={3} xxl={3}>
           <CCard className="mb-4" >
             <CCardHeader style={{ backgroundColor: '#54B4D3' }}>
               <h6>Working Days</h6>
@@ -167,7 +167,7 @@ const MainChart = () => {
             </CCardFooter>
           </CCard>
         </CCol>
-        <CCol sm={6} xl={4} xxl={3}>
+        <CCol sm={6} xl={3} xxl={3}>
           <CCard className="mb-4">
             <CCardHeader style={{ backgroundColor: '#14A44D' }}>
               <h6>Monthly Log</h6>
@@ -187,7 +187,7 @@ const MainChart = () => {
             </CCardFooter>
           </CCard>
         </CCol>
-        <CCol sm={6} xl={4} xxl={3}>
+        <CCol sm={6} xl={3} xxl={3}>
           <CCard className="mb-4">
             <CCardHeader style={{ backgroundColor: '#DC4C64' }}>
               <h6>Requests</h6>
@@ -207,7 +207,7 @@ const MainChart = () => {
             </CCardFooter>
           </CCard>
         </CCol>
-        <CCol sm={6} xl={4} xxl={3}>
+        <CCol sm={6} xl={3} xxl={3}>
           <CCard className="mb-4">
             <CCardHeader style={{ backgroundColor: '#E4A11B' }}>
               <h6>Leaves</h6>

@@ -149,15 +149,15 @@ const Attendance = () => {
         </CCardBody>
       </CCard>
       <CRow>
-        <CCol xs={12} sm={6}>
+        <CCol xs={12} sm={12} xl={6} xxl={6}>
           <CCard className="mb-4">
             <CCardHeader>Calendar</CCardHeader>
             <CCardBody>
-              <CRow>
-                <CCol>
-                  <Calendar tileClassName={coloredDays} />
+              <CRow  xs={{ gutter: 3 }}>
+                <CCol xs={12} sm={6} xl={8} xxl={8} style={{marginBottom: '5px'}}>
+                  <Calendar tileClassName={coloredDays}/>
                 </CCol>
-                <CCol>
+                <CCol xs={12} sm={6} xl={4} xxl={4}>
                   <CCard className='p-2'>
                     <CRow className='p-2'>
                       <div>
@@ -228,7 +228,7 @@ const Attendance = () => {
             </CCardBody>
           </CCard>
         </CCol>
-        <CCol xs={12} sm={6}>
+        <CCol xs={12} sm={12} xl={6} xxl={6}>
           <Monthly />
         </CCol>
       </CRow>

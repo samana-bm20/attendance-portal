@@ -86,7 +86,7 @@ const Dashboard = () => {
       </CCard>
       <MainChart />
       <CRow xs={{ gutter: 3 }}>
-        <CCol sm={9} xl={6} xxl={9}>
+        <CCol sm={12} xl={9} xxl={9}>
           <CCard className="mb-4">
             <CCardHeader>Leave Requests</CCardHeader>
             <CCardBody>
@@ -185,7 +185,7 @@ const Dashboard = () => {
             </CCardBody>
           </CCard>
         </CCol>
-        <CCol sm={3} xl={2} xxl={3}>
+        <CCol sm={12} xl={3} xxl={3}>
           <CCard className="mb-2">
             <CCardHeader>Who's on Leave</CCardHeader>
             <CCardBody>
