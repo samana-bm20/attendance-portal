@@ -154,8 +154,7 @@ const EmployeeAttendance = () => {
         return { ...defaultStyles, backgroundColor: 'gold', color: 'black' };
       } else {
         if ((parseInt(cell.split(':')[0]) === 9 && parseInt(cell.split(':')[1]) >= 0) ||
-          parseInt(cell.split(':')[0]) > 9 ||
-          cell.split(':')[1].split(' ')[1] === 'PM') {
+          parseInt(cell.split(':')[0]) > 9 || cell.includes('PM')) {
           return { ...defaultStyles, backgroundColor: 'red', color: 'white' };
         }
       }

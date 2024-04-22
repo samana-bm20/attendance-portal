@@ -251,8 +251,6 @@ const LeavePage = () => {
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader style={{ display: 'flex' }}>Leave
-              {user?.userType == 2 && (
-                <>
                   <div className="leave-status" style={{ position: 'absolute', right: '10px', top: '-3px' }}>
                     <CButton
                       color="primary"
@@ -360,9 +358,6 @@ const LeavePage = () => {
                       <CButton color="primary" onClick={handleAdd}>Submit</CButton>
                     </CModalFooter>
                   </CModal>
-                </>
-              )}
-
             </CCardHeader>
             <CCardBody>
               <CRow xs={{ gutter: 12 }}>

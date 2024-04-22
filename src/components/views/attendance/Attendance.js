@@ -100,8 +100,7 @@ const Attendance = () => {
         return 'absent';
       } else {
         if ((parseInt(time.split(':')[0]) === 9 && parseInt(time.split(':')[1]) >= 0) ||
-          parseInt(time.split(':')[0]) > 9 ||
-          time.split(':')[1].split(' ')[1] === 'PM') {
+          parseInt(time.split(':')[0]) > 9 || time.includes('PM')) {
           return 'late';
         } else {
           return 'present';

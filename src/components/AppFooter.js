@@ -6,7 +6,7 @@ const AppFooter = () => {
     <CFooter className="px-4">
       <div>
           ESTD.
-        <span className="ms-1">&copy; 2000</span>
+        <span className="ms-1">&copy; 1993</span>
       </div>
       <div className="ms-auto">
         <span className="me-1">Technology Powered by ML Infomap</span>
