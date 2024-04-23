@@ -260,7 +260,7 @@ const EmployeeAttendance = () => {
                     {selectedMonthYear}
                   </CDropdownToggle>
                   <CDropdownMenu
-                    onClick={handleMonthChange}>
+                    onClick={handleMonthChange} style={{cursor: 'pointer'}}>
                     <CDropdownItem value="">select month</CDropdownItem>
                     {months}
                   </CDropdownMenu>
