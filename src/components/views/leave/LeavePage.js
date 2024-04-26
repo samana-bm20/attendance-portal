@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import { useSelector } from "react-redux";
 import {
   CCard,
@@ -32,10 +32,11 @@ import './LeaveRequestPage.css'
 import axios from "axios";
 import { toast } from "react-toastify";
 import CIcon from "@coreui/icons-react";
-
+import Pagination from "./Pagination";
+let PageSize = 10;
 
 const LeavePage = () => {
-  const user = useSelector((state) => state.UserReducer.user);
+  const user = useSelector((state) => state.user);
   const [checkStatusPending, setCheckStatusPending] = useState('');
   const [showPullback, setShowPullback] = useState(false);
   const [leaveRequests, setLeaveRequests] = useState([]);
@@ -49,12 +50,19 @@ const LeavePage = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [firstHalfChecked, setFirstHalfChecked] = useState(false);
   const [secondHalfChecked, setSecondHalfChecked] = useState(false);
-
-  const fetchLeaveRequests = async () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [secondHalf, setSecondHalf] = useState(0.5);
+  const [firstHalf, setFirstHalf] = useState(0.5);
+  const fetchLeaveRequests = async (page) => {
     try {
-      const response = await axios.get(`${Config.apiUrl}/pending?userType=${user?.userType}&empid=${user?.empid}`);
+      const response = await axios.get(`${Config.apiUrl}/pending`, {
+        params: {
+          userType: user?.userType,
+          empid: user?.empid
+        }
+      });
       setLeaveRequests(response.data.data);
-      const hasPendingRequest = response.data.data.some(request => request.Status === 'Pending');;
+      const hasPendingRequest = response.data.data.some(request => request.Status === 'Pending');
       if (hasPendingRequest) {
         setCheckStatusPending('Pending');
       } else {
@@ -65,10 +73,10 @@ const LeavePage = () => {
     }
   };
 
-  useEffect(() => {
 
-    fetchLeaveRequests();
-  }, []);
+  useEffect(() => {
+    fetchLeaveRequests(currentPage); // Pass currentPage to fetch the appropriate page
+  }, [currentPage]);
 
   const handleApprove = async () => {
 
@@ -165,10 +173,12 @@ const LeavePage = () => {
   }
 
   const handleFirstHalfChange = (event) => {
+    //setFirstHalf(0.5);
     setFirstHalfChecked(event.target.checked);
   };
 
   const handleSecondHalfChange = (event) => {
+    //setSecondHalf(0.5);
     setSecondHalfChecked(event.target.checked);
   };
 
@@ -187,20 +197,29 @@ const LeavePage = () => {
         return;
       }
       let firstHalf = 'No';
+      let secondHalf = 'No';
+      let NoOfLeave = 0;
       if (firstHalfChecked == true) {
         firstHalf = 'Yes';
-      }
-      else {
-        firstHalf = 'No';
-      }
-      let secondHalf = 'No';
-      if (secondHalfChecked == true) {
-        secondHalf = 'Yes';
-      }
-      else {
         secondHalf = 'No';
+        NoOfLeave = calculateDays(startDate, endDate, .5);
       }
-
+     else if (secondHalfChecked == true) {
+        secondHalf = 'Yes';
+        firstHalf = 'No';
+        NoOfLeave = calculateDays(startDate, endDate, .5);
+      }
+      else if (secondHalfChecked == true && firstHalfChecked == true) {
+        firstHalf = 'Yes';
+        secondHalf = 'Yes';
+        NoOfLeave = calculateDays(startDate, endDate, 0);
+      }
+      else{
+        firstHalf = 'No';
+        secondHalf = 'No';
+        NoOfLeave = calculateDays(startDate, endDate, 1);
+      }
+    
       const params = {
         "EmpID": user?.empid,
         "empName": user?.name,
@@ -208,7 +227,8 @@ const LeavePage = () => {
         "toDate": endDate,
         "reason": reason,
         "firstHalf": firstHalf,
-        "secondHalf": secondHalf
+        "secondHalf": secondHalf,
+        "NoOfLeave": NoOfLeave
       };
 
 
@@ -234,16 +254,23 @@ const LeavePage = () => {
     setShowAddDialog(true);
   };
 
-  const calculateDays = (start, end) => {
+  const calculateDays = (start, end, count) => {
     if (start && end) {
       const startDt = new Date(start);
       const endDt = new Date(end);
       const diffTime = Math.abs(endDt - startDt);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       //setDaysCount(diffDays);
-      return diffDays+1;
+      return diffDays + count;
     }
   };
+
+  const currentTableData = useMemo(() => {
+    const firstPageIndex = (currentPage - 1) * PageSize;
+    const lastPageIndex = firstPageIndex + PageSize;
+    return leaveRequests.slice(firstPageIndex, lastPageIndex);
+  }, [leaveRequests, currentPage]);
+
 
   return (
     <>
@@ -251,113 +278,113 @@ const LeavePage = () => {
         <CCol xs={12}>
           <CCard className="mb-4">
             <CCardHeader style={{ display: 'flex' }}>Leave
-                  <div className="leave-status" style={{ position: 'absolute', right: '10px', top: '-3px' }}>
-                    <CButton
-                      color="primary"
-                      type="button"
-                      className="reject-btn"
-                      onClick={openModal}>
-                      Leave Request
-                    </CButton>
-                  </div>
-                  <CModal visible={showAddDialog} onClose={handleAddCancel}>
-                    <CModalHeader>
-                      <CModalTitle>Mark Leave</CModalTitle>
-                    </CModalHeader>
-                    <CModalBody>
-                      <CForm>
-                        <CRow className="g-3">
-                          <CCol xs style={{ marginBottom: '5px' }}>
-                            <CFormLabel id="inputGroupPrepend03">Employee Id</CFormLabel>
-                            <CFormInput
-                              type="text"
-                              id="EmpID"
-                              name='EmpID'
-                              placeholder="Employee Id"
-                              defaultValue={user?.empid}
-                              disabled
-                            />
-                          </CCol>
-                          <CCol xs>
-                            <CFormLabel id="inputGroupPrepend03">Employee Name</CFormLabel>
-                            <CFormInput
-                              type="text"
-                              placeholder="Employee Name"
-                              id="EmpID"
-                              name='EmpID'
-                              defaultValue={user?.name}
-                              disabled
-                            />
-                          </CCol>
-                        </CRow>
-                        <CRow className="g-3">
-                          <CCol xs style={{ marginBottom: '5px' }}>
-                            <CFormLabel id="inputGroupPrepend03">Leave Start Date</CFormLabel>
-                            <CFormInput
-                              type="date"
-                              id="StartDate"
-                              name='StartDate'
-                              onChange={handlStartDateChange}
-                              placeholder="Leave Start Date"
+              <div className="leave-status" style={{ position: 'absolute', right: '10px', top: '-3px' }}>
+                <CButton
+                  color="primary"
+                  type="button"
+                  className="reject-btn"
+                  onClick={openModal}>
+                  Leave Request
+                </CButton>
+              </div>
+              <CModal visible={showAddDialog} onClose={handleAddCancel}>
+                <CModalHeader>
+                  <CModalTitle>Mark Leave</CModalTitle>
+                </CModalHeader>
+                <CModalBody>
+                  <CForm>
+                    <CRow className="g-3">
+                      <CCol xs style={{ marginBottom: '5px' }}>
+                        <CFormLabel id="inputGroupPrepend03">Employee Id</CFormLabel>
+                        <CFormInput
+                          type="text"
+                          id="EmpID"
+                          name='EmpID'
+                          placeholder="Employee Id"
+                          defaultValue={user?.empid}
+                          disabled
+                        />
+                      </CCol>
+                      <CCol xs>
+                        <CFormLabel id="inputGroupPrepend03">Employee Name</CFormLabel>
+                        <CFormInput
+                          type="text"
+                          placeholder="Employee Name"
+                          id="EmpID"
+                          name='EmpID'
+                          defaultValue={user?.name}
+                          disabled
+                        />
+                      </CCol>
+                    </CRow>
+                    <CRow className="g-3">
+                      <CCol xs style={{ marginBottom: '5px' }}>
+                        <CFormLabel id="inputGroupPrepend03">Leave Start Date</CFormLabel>
+                        <CFormInput
+                          type="date"
+                          id="StartDate"
+                          name='StartDate'
+                          onChange={handlStartDateChange}
+                          placeholder="Leave Start Date"
 
-                            />
-                          </CCol>
-                          <CCol xs>
-                            <CFormLabel id="inputGroupPrepend03">Leave End Date</CFormLabel>
-                            <CFormInput
-                              type="date"
-                              placeholder="Leave End Date"
-                              onChange={handleEndDateChange}
-                              min={startDate}
-                              id="EndDate"
-                              name='EndDate'
+                        />
+                      </CCol>
+                      <CCol xs>
+                        <CFormLabel id="inputGroupPrepend03">Leave End Date</CFormLabel>
+                        <CFormInput
+                          type="date"
+                          placeholder="Leave End Date"
+                          onChange={handleEndDateChange}
+                          min={startDate}
+                          id="EndDate"
+                          name='EndDate'
 
-                            />
-                          </CCol>
-                        </CRow>
-                        <CRow className="g-3">
+                        />
+                      </CCol>
+                    </CRow>
+                    <CRow className="g-3">
 
-                          <CCol xs>
-                            <CFormCheck
-                              inline
-                              id="inlineCheckbox2"
-                              value="Yes"
-                              label="Second Half"
-                              checked={secondHalfChecked}
-                              onChange={handleSecondHalfChange}
-                            />
-                          </CCol>
-                          <CCol xs style={{ marginBottom: '5px' }}>
-                            <CFormCheck
-                              inline
-                              id="inlineCheckbox1"
-                              value="Yes"
-                              label="First Half"
-                              checked={firstHalfChecked}
-                              onChange={handleFirstHalfChange}
-                            />
-                          </CCol>
-                        </CRow>
-                        <div className="mb-3">
-                          <CFormLabel htmlFor="exampleFormControlTextarea1">Reason</CFormLabel>
-                          <CFormTextarea
-                            id="exampleFormControlTextarea1"
-                            rows={3}
-                            placeholder="Reason"
-                            name="reason"
-                            onChange={handleReasonChange}
+                      <CCol xs>
+                        <CFormCheck
+                          inline
+                          id="inlineCheckbox2"
+                          value="Yes"
+                          label="Second Half"
+                          checked={secondHalfChecked}
+                          onChange={handleSecondHalfChange}
+                        />
+                      </CCol>
+                      <CCol xs style={{ marginBottom: '5px' }}>
+                        <CFormCheck
+                          inline
+                          id="inlineCheckbox1"
+                          value="Yes"
+                          label="First Half"
+                          checked={firstHalfChecked}
+                          onChange={handleFirstHalfChange}
+                        />
+                      </CCol>
+                    </CRow>
+                    <div className="mb-3">
+                      <CFormLabel htmlFor="exampleFormControlTextarea1">Reason</CFormLabel>
+                      <CFormTextarea
+                        id="exampleFormControlTextarea1"
+                        rows={3}
+                        placeholder="Reason"
+                        name="reason"
+                        onChange={handleReasonChange}
 
-                          ></CFormTextarea>
-                        </div>
-                      </CForm>
-                    </CModalBody>
-                    <CModalFooter>
-                      <CButton color="secondary" onClick={handleAddCancel}>
-                        Cancel
-                      </CButton>
-                      <CButton color="primary" onClick={handleAdd}>Submit</CButton>
-                    </CModalFooter>
-                  </CModal>
+                      ></CFormTextarea>
+                    </div>
+                  </CForm>
+                </CModalBody>
+                <CModalFooter>
+                  <CButton color="secondary" onClick={handleAddCancel}>
+                    Cancel
+                  </CButton>
+                  <CButton color="primary" onClick={handleAdd}>Submit</CButton>
+                </CModalFooter>
+              </CModal>
             </CCardHeader>
             <CCardBody>
               <CRow xs={{ gutter: 12 }}>
@@ -394,7 +421,7 @@ const LeavePage = () => {
                           Status
                         </CTableHeaderCell>
                         <CTableHeaderCell scope="col" className="bg-body-tertiary text-center">
-                          Reject Reason
+                          Remarks
                         </CTableHeaderCell>
                         {user?.userType == 1 && (
                           <>
@@ -415,7 +442,7 @@ const LeavePage = () => {
                       </CTableRow>
                     </CTableHead>
                     <CTableBody>
-                      {leaveRequests.map(request => (
+                      {currentTableData.map(request => (
                         <CTableRow key={request.SNo}>
                           <CTableHeaderCell scope="row">{request.id}</CTableHeaderCell>
                           <CTableDataCell className="text-nowrap">
@@ -425,8 +452,7 @@ const LeavePage = () => {
                           <CTableDataCell className="text-nowrap">{request.fromDate}</CTableDataCell>
                           <CTableDataCell className="text-nowrap">{request.toDate}</CTableDataCell>
                           <CTableDataCell>{request.Reason}</CTableDataCell>
-                          <CTableDataCell>{calculateDays(request.fromDate, request.toDate)}</CTableDataCell>
-
+                          <CTableDataCell>{request.NoOfLeave}</CTableDataCell>
                           {request.FirstHalf == 0 && (
                             <>
                               <CTableDataCell>No</CTableDataCell>
@@ -502,8 +528,8 @@ const LeavePage = () => {
                                   <CTableDataCell>
                                     <CRow style={{ position: 'relative', display: 'flex' }}>
                                       <CCol>
-                                      <div className="leave-status">
-                                      {/* <CButton
+                                        <div className="leave-status">
+                                          {/* <CButton
                                         color="primary"
                                         className="approve-btn"
                                         onClick={() => {
@@ -512,15 +538,15 @@ const LeavePage = () => {
                                         }}>
                                         PULLBACK
                                       </CButton> */}
-                                      <CIcon icon={cilTrash} style={{color: 'red', cursor: 'pointer'}}
-                                      onClick={() => {
-                                        setSelectedRequest(request);
-                                        setShowPullback(!showPullback);
-                                      }}></CIcon>
-                                    </div>
+                                          <CIcon icon={cilTrash} style={{ color: 'red', cursor: 'pointer' }}
+                                            onClick={() => {
+                                              setSelectedRequest(request);
+                                              setShowPullback(!showPullback);
+                                            }}></CIcon>
+                                        </div>
                                       </CCol>
                                     </CRow>
-                                    
+
                                     <CModal visible={showPullback} onClose={() => setShowPullback(false)}>
                                       <CModalHeader>
                                         <CModalTitle> Pullback </CModalTitle>
@@ -569,7 +595,7 @@ const LeavePage = () => {
                           {user?.userType == 2 && (
                             <>
                               {request.Status == 'Pullback' && (
-                              <CTableDataCell></CTableDataCell>
+                                <CTableDataCell></CTableDataCell>
                               )}
                             </>
                           )}
@@ -663,21 +689,21 @@ const LeavePage = () => {
                           {request.Status == 'Approved' && (
                             <>
                               {user?.userType == 1 && (
-                              <CTableDataCell></CTableDataCell>
+                                <CTableDataCell></CTableDataCell>
                               )}
                             </>
                           )}
                           {request.Status == 'Rejected' && (
                             <>
                               {user?.userType == 1 && (
-                                  <CTableDataCell></CTableDataCell>
+                                <CTableDataCell></CTableDataCell>
                               )}
                             </>
                           )}
                           {request.Status == 'Pullback' && (
                             <>
                               {user?.userType == 1 && (
-                                  <CTableDataCell></CTableDataCell>
+                                <CTableDataCell></CTableDataCell>
                               )}
                             </>
                           )}
@@ -686,6 +712,13 @@ const LeavePage = () => {
                       ))}
                     </CTableBody>
                   </CTable>
+                  <Pagination
+                    className="pagination-bar"
+                    currentPage={currentPage}
+                    totalCount={leaveRequests.length}
+                    pageSize={PageSize}
+                    onPageChange={page => setCurrentPage(page)}
+                  />
                 </CCol>
 
               </CRow>

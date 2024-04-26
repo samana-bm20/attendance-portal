@@ -106,20 +106,41 @@
   opacity: 0.3;
 }
 
-.react-calendar .react-calendar__tile[class*='pending'] {
-  background-color: plum !important;
-  border: #fff solid 0.5px;
-}
-
 .react-calendar .react-calendar__tile[class*='approved'] {
   background-color: lightskyblue !important;
   border: #fff solid 0.5px;
 }
 
-.react-calendar .react-calendar__tile[class*='rejected'] {
-  background-color: sandybrown !important;
+.react-calendar .react-calendar__tile[class*='firsthalf'] {
+  background: linear-gradient(to right, #87cefa 50%, transparent 50%) !important;
+  border: #fff solid 0.5px;
+}
+
+.react-calendar .react-calendar__tile[class*='firstPresent'] {
+  background: linear-gradient(to right, #87cefa 50%, #90ee90 50%) !important;
   border: #fff solid 0.5px;
 
+}
+
+.react-calendar .react-calendar__tile[class*='firstAbsent'] {
+  background: linear-gradient(to right, #87cefa 50%, #ffe869 50%) !important;
+  border: #fff solid 0.5px;
+
+}
+
+.react-calendar .react-calendar__tile[class*='secondhalf'] {
+  background: linear-gradient(to right, transparent 50%, #87cefa 50%) !important;
+  border: #fff solid 0.5px;
+}
+
+.react-calendar .react-calendar__tile[class*='secondPresent'] {
+  background: linear-gradient(to right, #90ee90 50%, #87cefa 50%) !important;
+  border: #fff solid 0.5px;
+}
+
+.react-calendar .react-calendar__tile[class*='secondAbsent'] {
+  background: linear-gradient(to right, #ffe869 50%, #87cefa 50%) !important;
+  border: #fff solid 0.5px;
 }
 
 .react-calendar .react-calendar__tile[class*='present'] {
@@ -129,7 +150,7 @@
 }
 
 .react-calendar .react-calendar__tile[class*='absent'] {
-  background-color: rgb(255, 232, 105) !important;
+  background-color: #ffe869 !important;
   border: #fff solid 0.5px;
 
 }

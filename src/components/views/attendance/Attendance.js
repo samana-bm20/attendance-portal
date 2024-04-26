@@ -8,7 +8,7 @@ import axios from 'axios'
 import Monthly from './Monthly'
 
 const Attendance = () => {
-  const user = useSelector((state) => state.UserReducer.user);
+  const user = useSelector((state) => state.user);
   const [calendarData, setCalendarData] = useState([]);
   const [leaveRecords, setLeaveRecords] = useState([]);
   const [workingDays, setWorkingDays] = useState(0);
@@ -70,7 +70,6 @@ const Attendance = () => {
     fetchLeaveRecord();
   }, [user?.name]);
 
-
   const coloredDays = ({ date, view }) => {
     const formattedDate = date.toLocaleDateString('en-GB', {
       day: '2-digit',
@@ -80,18 +79,41 @@ const Attendance = () => {
     const record = calendarData.find(item => item.date === formattedDate);
     const leaveRecord = leaveRecords.find(record => (
       new Date(formattedDate) >= new Date(record.FromDate) &&
-      new Date(formattedDate) <= new Date(record.ToDate
-      )));
+      new Date(formattedDate) <= new Date(record.ToDate) && record.Status === 'Approved'));
 
     if (leaveRecord) {
-      const { Status } = leaveRecord;
-      if (Status === 'Pending') {
-        return 'pending';
-      } else if (Status === 'Approved') {
-        return 'approved';
-      } else if (Status === 'Rejected') {
-        return 'rejected';
-      }
+      const { FirstHalf, SecondHalf, FromDate, ToDate } = leaveRecord;
+        if(FirstHalf) {
+          if(formattedDate == ToDate) {
+            if (record) {
+              const { time } = record;
+              if ((parseInt(time.split(':')[0]) < 2 && time.includes('PM'))) {
+                return 'firstPresent';
+              } else {
+                return 'firstAbsent';
+              }
+            } else {
+              return 'firsthalf';
+            }
+          } else {
+            return 'approved';
+          }
+        } else if (SecondHalf) {
+          if(formattedDate == FromDate) {
+            if (record) {
+              const { time } = record;
+              if ((parseInt(time.split(':')[0]) < 10 && time.includes('AM'))) {
+                return 'secondPresent';
+              } else {
+                return 'secondAbsent';
+              }
+            } else {
+              return 'secondhalf';
+            }
+          } else {
+            return 'approved';
+          }
+        }
     } else if (record) {
       const { time } = record;
       if (time === 'OFF') {
@@ -152,13 +174,13 @@ const Attendance = () => {
           <CCard className="mb-4">
             <CCardHeader>Calendar</CCardHeader>
             <CCardBody>
-              <CRow  xs={{ gutter: 3 }}>
-                <CCol xs={12} sm={6} xl={8} xxl={8} style={{marginBottom: '5px'}}>
-                  <Calendar tileClassName={coloredDays}/>
+              <CRow > 
+                <CCol xs={12} sm={8} xl={8} xxl={8} style={{marginBottom: '5px', display: 'flex', justifyContent: 'center'}}>
+                  <Calendar tileClassName={coloredDays} />
                 </CCol>
-                <CCol xs={12} sm={6} xl={4} xxl={4}>
-                  <CCard className='p-2'>
-                    <CRow className='p-2'>
+                <CCol xs={12} sm={4} xl={4} xxl={4} style={{display: 'flex', justifyContent: 'center'}}>
+                  <CCard className='p-2' style={{justifyContent: 'center'}}>
+                    <CRow className='p-1'>
                       <div>
                         <span
                           className='color-represent'
@@ -167,7 +189,7 @@ const Attendance = () => {
                         <span className='color-meaning'>Present</span>
                       </div>
                     </CRow>
-                    <CRow className='p-2'>
+                    <CRow className='p-1'>
                       <div>
                         <span
                           className='color-represent'
@@ -176,7 +198,7 @@ const Attendance = () => {
                         <span className='color-meaning'>Late</span>
                       </div>
                     </CRow>
-                    <CRow className='p-2'>
+                    <CRow className='p-1'>
                       <div>
                         <span
                           className='color-represent'
@@ -185,7 +207,7 @@ const Attendance = () => {
                         <span className='color-meaning'>Absent</span>
                       </div>
                     </CRow>
-                    <CRow className='p-2'>
+                    <CRow className='p-1'>
                       <div>
                         <span
                           className='color-represent'
@@ -194,31 +216,13 @@ const Attendance = () => {
                         <span className='color-meaning'>Off</span>
                       </div>
                     </CRow>
-                    <CRow className='p-2'>
+                    <CRow className='p-1'>
                       <div>
                         <span
                           className='color-represent'
                           style={{ backgroundColor: 'lightskyblue' }}>
                         </span>
                         <span className='color-meaning'>Leave</span>
-                      </div>
-                    </CRow>
-                    <CRow className='p-2'>
-                      <div>
-                        <span
-                          className='color-represent'
-                          style={{ backgroundColor: 'sandybrown' }}>
-                        </span>
-                        <span className='color-meaning'>Rejected</span>
-                      </div>
-                    </CRow>
-                    <CRow className='p-2'>
-                      <div>
-                        <span
-                          className='color-represent'
-                          style={{ backgroundColor: 'plum' }}>
-                        </span>
-                        <span className='color-meaning'>Pending</span>
                       </div>
                     </CRow>
                   </CCard>
