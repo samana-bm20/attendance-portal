@@ -113,6 +113,8 @@ const Attendance = () => {
           } else {
             return 'approved';
           }
+        } else {
+          return 'approved';
         }
     } else if (record) {
       const { time } = record;
