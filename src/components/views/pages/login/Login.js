@@ -5,7 +5,7 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import {
   Save_User,
-} from "../../../../Redux/actions";
+} from "../../../actions";
 
 import moment from "moment";
 import {
@@ -51,23 +51,13 @@ const Login = () => {
           },
         }
       );
-
       if (response.data.status === "OK") {
-        let params = {
-          username: username,
-          fullname: response.data.data[0].name,
-          empid: response.data.data[0].empid,
-        };
-
-        const recordResponse = await axios.post(`${Config.apiUrl}/record`, params);
-        if (recordResponse.data.status === 'OK') {
           const expireAt = moment()
             .add(Config.sessionExpiredTime, "minutes")
             .valueOf();
           const realData = { ...response.data.data, expireAt };
           dispatch(Save_User(realData));
           navigate("/dashboard");
-        }
       } else {
         // Handle invalid credentials
         toast.error('Invalid user credentials');
@@ -102,7 +92,6 @@ const Login = () => {
                           }} />
                       </CCol>
                     </CRow>
-                    {/* <h3>Login</h3> */}
                     <p className="text-body-secondary">Sign In to your account</p>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
@@ -136,33 +125,10 @@ const Login = () => {
                           Login
                         </CButton>
                       </CCol>
-                      {/* <CCol xs={6}>
-                        <Link to="/register">
-                          <CButton color="primary" className="mx-4 px-4">
-                            Register
-                          </CButton>
-                        </Link>
-                      </CCol> */}
                     </CRow>
                   </CForm>
                 </CCardBody>
               </CCard>
-              {/* <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
-                <CCardBody className="text-center">
-                  <div>
-                    <h2>ML Infomap</h2>
-                    <p>
-                      We are India's premier Vector Mapmakers since 1993. We design and develop GIS Apps
-                      on Cloud, Desktop & Mobile platforms for B2B & B2G organisations.
-                    </p>
-                    <Link to="/register">
-                      <CButton color="primary" className="mt-3" active tabIndex={-1}>
-                        Learn More!
-                      </CButton>
-                    </Link>
-                  </div>
-                </CCardBody>
-              </CCard> */}
             </CCardGroup>
           </CCol>
         </CRow>

@@ -27,7 +27,7 @@ import {
 import UserContext from '../../../context/UserContext';
 
 const Monthly = () => {
-    const user = useSelector((state) => state.UserReducer.user);
+    const user = useSelector((state) => state.user);
     const { months } = useContext(UserContext);
     const username = localStorage.getItem('user');
     const empid = localStorage.getItem('empid');
@@ -36,10 +36,7 @@ const Monthly = () => {
     const [reportMonth, setReportMonth] = useState('');
     const [reportYear, setReportYear] = useState('');
     const [attendanceData, setAttendanceData] = useState([]);
-    const [leaveRecords, setLeaveRecords] = useState([]);
-    const [offDays, setOffDays] = useState(0);
-    const [AbsentDays, setAbsentDays] = useState(0);
-    const [showAdminPanel, setShowAdminPanel] = useState(false);
+    const [leaveRecords, setLeaveRecords] = useState([]); 
     const [isFirstLoad, setIsFirstLoad] = useState(true);
     const [valueFirstLoad, setValueFirstLoad] = useState(true);
    
@@ -105,6 +102,7 @@ const Monthly = () => {
     const handleMonthReport = async () => {
         try {
             const response = await axios.get(`${Config.apiUrl}/month?username=${user?.username}&month=${reportMonth}&year=${reportYear}`);
+            console.log(response.data.data);
             const updatedAttendanceData = await Promise.all(response.data.data.map(async (record) => {
                 if (record.time === null) {
                     const allAbsent = await checkAllAbsent(record.date);
@@ -158,7 +156,7 @@ const Monthly = () => {
     
         const heading = `Attendance Report - ${selectedMonthYear}`;
         worksheet.addRow([heading]);
-        worksheet.mergeCells('A1', `D1`);
+        worksheet.mergeCells('A1', `E1`);
         worksheet.getCell('A1').value = heading;
         worksheet.getCell('A1').font = { bold: true };
         worksheet.getCell('A1').alignment = { horizontal: 'center' };
@@ -256,7 +254,10 @@ const Monthly = () => {
                                 Day
                             </CTableHeaderCell>
                             <CTableHeaderCell className="bg-body-tertiary text-center">
-                                Time
+                                In Time
+                            </CTableHeaderCell>
+                            <CTableHeaderCell className="bg-body-tertiary text-center">
+                                Out Time
                             </CTableHeaderCell>
                         </CTableRow>
                     </CTableHead>
@@ -267,6 +268,7 @@ const Monthly = () => {
                                 <CTableDataCell>{record.date}</CTableDataCell>
                                 <CTableDataCell>{record.day}</CTableDataCell>
                                 <CTableDataCell>{record.time}</CTableDataCell>
+                                <CTableDataCell>{record.out? record.out : "N/A"}</CTableDataCell>
                             </CTableRow>
                         ))}
                     </CTableBody>
