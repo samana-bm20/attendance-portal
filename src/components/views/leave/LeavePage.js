@@ -23,6 +23,7 @@ import {
   CModalFooter,
   CModalHeader,
   CModalTitle,
+  CTooltip,
 } from '@coreui/react'
 import {
   cilTrash,
@@ -204,7 +205,7 @@ const LeavePage = () => {
         secondHalf = 'No';
         NoOfLeave = calculateDays(startDate, endDate, .5);
       }
-     else if (secondHalfChecked == true) {
+      else if (secondHalfChecked == true) {
         secondHalf = 'Yes';
         firstHalf = 'No';
         NoOfLeave = calculateDays(startDate, endDate, .5);
@@ -214,12 +215,12 @@ const LeavePage = () => {
         secondHalf = 'Yes';
         NoOfLeave = calculateDays(startDate, endDate, 0);
       }
-      else{
+      else {
         firstHalf = 'No';
         secondHalf = 'No';
         NoOfLeave = calculateDays(startDate, endDate, 1);
       }
-    
+
       const params = {
         "EmpID": user?.empid,
         "empName": user?.name,
@@ -279,13 +280,18 @@ const LeavePage = () => {
           <CCard className="mb-4">
             <CCardHeader style={{ display: 'flex' }}>Leave
               <div className="leave-status" style={{ position: 'absolute', right: '10px', top: '-3px' }}>
-                <CButton
-                  color="primary"
-                  type="button"
-                  className="reject-btn"
-                  onClick={openModal}>
-                  Leave Request
-                </CButton>
+                <CTooltip
+                  content="Apply leave"
+                  trigger={['hover']}
+                >
+                  <CButton
+                    color="primary"
+                    type="button"
+                    className="reject-btn"
+                    onClick={openModal}>
+                    Leave Request
+                  </CButton>
+                </CTooltip>
               </div>
               <CModal visible={showAddDialog} onClose={handleAddCancel}>
                 <CModalHeader>
@@ -529,20 +535,13 @@ const LeavePage = () => {
                                     <CRow style={{ position: 'relative', display: 'flex' }}>
                                       <CCol>
                                         <div className="leave-status">
-                                          {/* <CButton
-                                        color="primary"
-                                        className="approve-btn"
-                                        onClick={() => {
-                                          setSelectedRequest(request);
-                                          setShowPullback(!showPullback);
-                                        }}>
-                                        PULLBACK
-                                      </CButton> */}
-                                          <CIcon icon={cilTrash} style={{ color: 'red', cursor: 'pointer' }}
-                                            onClick={() => {
-                                              setSelectedRequest(request);
-                                              setShowPullback(!showPullback);
-                                            }}></CIcon>
+                                          <CTooltip
+                                            content="Delete request"
+                                            trigger={['hover']}
+                                          >
+                                            <CIcon icon={cilTrash} style={{ color: 'red', cursor: 'pointer' }}
+                                            ></CIcon>
+                                          </CTooltip>
                                         </div>
                                       </CCol>
                                     </CRow>
@@ -609,29 +608,39 @@ const LeavePage = () => {
                                     <CRow style={{ position: 'relative', display: 'flex' }}>
                                       <CCol>
                                         <div className="leave-status">
-                                          <CButton
-                                            color="primary"
-                                            className="approve-btn"
-                                            onClick={() => {
-                                              setSelectedRequest(request);
-                                              setShowApproveDialog(!showApproveDialog);
-                                            }}>
-                                            APPROVE
-                                          </CButton>
+                                          <CTooltip
+                                            content="Approve leave"
+                                            trigger={['hover']}
+                                          >
+                                            <CButton
+                                              color="primary"
+                                              className="approve-btn"
+                                              onClick={() => {
+                                                setSelectedRequest(request);
+                                                setShowApproveDialog(!showApproveDialog);
+                                              }}>
+                                              APPROVE
+                                            </CButton>
+                                          </CTooltip>
                                         </div>
                                       </CCol>
                                       <CCol>
                                         <div className="leave-status">
-                                          <CButton
-                                            color="primary"
-                                            type="button"
-                                            className="reject-btn"
-                                            onClick={() => {
-                                              setSelectedRequest(request);
-                                              setShowRejectDialog(!showRejectDialog);
-                                            }}>
-                                            REJECT
-                                          </CButton>
+                                          <CTooltip
+                                            content="Reject leave"
+                                            trigger={['hover']}
+                                          >
+                                            <CButton
+                                              color="primary"
+                                              type="button"
+                                              className="reject-btn"
+                                              onClick={() => {
+                                                setSelectedRequest(request);
+                                                setShowRejectDialog(!showRejectDialog);
+                                              }}>
+                                              REJECT
+                                            </CButton>
+                                          </CTooltip>
                                         </div>
                                       </CCol>
                                     </CRow>

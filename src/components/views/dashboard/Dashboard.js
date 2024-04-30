@@ -20,6 +20,7 @@ import {
   CModalTitle,
   CForm,
   CFormLabel,
+  CTooltip,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilClock, cilCheckCircle, cilXCircle, cilUser, cilBan } from '@coreui/icons'
@@ -55,7 +56,7 @@ const Dashboard = () => {
     };
     fetchLoginTime();
   }, [user?.username]);
-  
+
   useEffect(() => {
     const fetchLogoutTime = async () => {
       try {
@@ -163,12 +164,22 @@ const Dashboard = () => {
             <CCardBody>
               <CRow>
                 <CCol>
-                  <CButton color="success" disabled={inDisabled} onClick={recordLogin}>Mark In Time</CButton>
+                  <CTooltip
+                    content="Mark attendance"
+                    trigger={['hover']}
+                  >
+                    <CButton color="success" disabled={inDisabled} onClick={recordLogin}>Mark In Time</CButton>
+                  </CTooltip>
                 </CCol>
                 <CCol>
-                  <CButton color="warning" disabled={outDisabled} onClick={() => {
-                    setShowOutTime(!showOutTime);
-                  }}>Mark Out Time</CButton>
+                  <CTooltip
+                    content="Mark logout time"
+                    trigger={['hover']}
+                  >
+                    <CButton color="warning" disabled={outDisabled} onClick={() => {
+                      setShowOutTime(!showOutTime);
+                    }}>Mark Out Time</CButton>
+                    </CTooltip>
                 </CCol>
               </CRow>
               <CModal visible={showOutTime} onClose={() => setShowOutTime(false)}>
@@ -179,7 +190,7 @@ const Dashboard = () => {
                   <CForm>
                     <div className="mb-3">
                       <CFormLabel htmlFor="exampleFormControlTextarea1">
-                        Do you want to mark out time? </CFormLabel>
+                        Do you want to mark logout time? </CFormLabel>
                     </div>
                   </CForm>
                 </CModalBody>
@@ -305,7 +316,7 @@ const Dashboard = () => {
         </CCol>
         <CCol sm={12} xl={3} xxl={3}>
           <CCard className="mb-2">
-            <CCardHeader>Who's on Leave</CCardHeader>
+            <CCardHeader>Who's on Leave Today</CCardHeader>
             <CCardBody>
               <CRow className="mb-4">
                 <CCol>On Leave: {todayLeaves.length}</CCol>

@@ -20,6 +20,7 @@ import {
   CInputGroup,
   CInputGroupText,
   CRow,
+  CTooltip,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser } from '@coreui/icons'
@@ -51,13 +52,31 @@ const Login = () => {
           },
         }
       );
+
+      // if (response.data.status === "OK") {
+      //   let params = {
+      //     username: username,
+      //     fullname: response.data.data[0].name,
+      //     empid: response.data.data[0].empid,
+      //   };
+
+      //   const recordResponse = await axios.post(`${Config.apiUrl}/record`, params);
+      //   if (recordResponse.data.status === 'OK') {
+      //     const expireAt = moment()
+      //       .add(Config.sessionExpiredTime, "minutes")
+      //       .valueOf();
+      //     const realData = { ...response.data.data, expireAt };
+      //     dispatch(Save_User(realData));
+      //     navigate("/dashboard");
+      //   }
+      // } 
       if (response.data.status === "OK") {
-          const expireAt = moment()
-            .add(Config.sessionExpiredTime, "minutes")
-            .valueOf();
-          const realData = { ...response.data.data, expireAt };
-          dispatch(Save_User(realData));
-          navigate("/dashboard");
+        const expireAt = moment()
+          .add(Config.sessionExpiredTime, "minutes")
+          .valueOf();
+        const realData = { ...response.data.data, expireAt };
+        dispatch(Save_User(realData));
+        navigate("/dashboard");
       } else {
         // Handle invalid credentials
         toast.error('Invalid user credentials');
@@ -77,14 +96,14 @@ const Login = () => {
               <CCard className="p-4">
                 <CCardBody>
                   <CForm>
-                    <CRow style={{display: 'flex', justifyContent: 'center'}}>
+                    <CRow style={{ display: 'flex', justifyContent: 'center' }}>
                       <CCol>
                         <img src={logo} alt='Logo'
                           style={{
                             padding: '5px',
                             width: '50px', height: '50px'
                           }} />
-                          <img src={logoname} alt='Company'
+                        <img src={logoname} alt='Company'
                           style={{
                             backgroundColor: 'white',
                             padding: '5px', borderRadius: '5px',
@@ -97,18 +116,27 @@ const Login = () => {
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
-                      <CFormInput
-                        placeholder="Username"
-                        autoComplete="username"
-                        value={username}
-                        onChange={(e) => {
-                          setUsername(e.target.value);
-                        }} />
+                      <CTooltip
+                        content="username"
+                        trigger={['hover']}
+                      >
+                        <CFormInput
+                          placeholder="Username"
+                          autoComplete="username"
+                          value={username}
+                          onChange={(e) => {
+                            setUsername(e.target.value);
+                          }} />
+                      </CTooltip>
                     </CInputGroup>
                     <CInputGroup className="mb-4">
                       <CInputGroupText>
                         <CIcon icon={cilLockLocked} />
                       </CInputGroupText>
+                      <CTooltip
+                        content="password"
+                        trigger={['hover']}
+                      >
                       <CFormInput
                         type="password"
                         placeholder="Password"
@@ -118,12 +146,18 @@ const Login = () => {
                           setPassword(e.target.value);
                         }}
                       />
+                      </CTooltip>
                     </CInputGroup>
                     <CRow>
-                      <CCol xs={12} style={{display: 'flex', justifyContent: 'center'}}>
-                        <CButton color="primary" className="px-4" onClick={handleLogin}>
-                          Login
-                        </CButton>
+                      <CCol xs={12} style={{ display: 'flex', justifyContent: 'center' }}>
+                        <CTooltip
+                          content="login"
+                          trigger={['hover']}
+                        >
+                          <CButton color="primary" className="px-4" onClick={handleLogin}>
+                            Login
+                          </CButton>
+                        </CTooltip>
                       </CCol>
                     </CRow>
                   </CForm>
