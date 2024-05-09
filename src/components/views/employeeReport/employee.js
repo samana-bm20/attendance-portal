@@ -19,12 +19,13 @@ import {
   CDropdownMenu,
   CDropdownItem,
   CButton,
+  CTooltip,
 } from '@coreui/react'
 import axios from 'axios'
 import UserContext from '../../../context/UserContext'
 
 const EmployeeAttendance = () => {
-  const user = useSelector((state) => state.UserReducer.user);
+  const user = useSelector((state) => state.user);
   const [selectedMonthYear, setSelectedMonthYear] = useState('');
   const [reportMonth, setReportMonth] = useState('');
   const [reportYear, setReportYear] = useState('');
@@ -160,7 +161,7 @@ const EmployeeAttendance = () => {
       }
       return defaultStyles;
     } catch (error) {
-      console.error(error);
+      //console.error(error);
     }
   }
 
@@ -194,15 +195,15 @@ const EmployeeAttendance = () => {
     // Transpose column headers
     const columnHeaders = Array.from(columnName.querySelectorAll('th')).map(cell => cell.innerText);
     for (let i = 0; i < numHeaderCells; i++) {
-        worksheet.getCell(2, i + 1).value = columnHeaders[i];
-        worksheet.getCell(2, i + 1).font = { bold: true };
-        worksheet.getCell(2, i + 1).alignment = { horizontal: 'center' };
-        worksheet.getCell(2, i + 1).border = {
-            top: { style: 'thin' },
-            left: { style: 'thin' },
-            bottom: { style: 'thin' },
-            right: { style: 'thin' }
-        };
+      worksheet.getCell(2, i + 1).value = columnHeaders[i];
+      worksheet.getCell(2, i + 1).font = { bold: true };
+      worksheet.getCell(2, i + 1).alignment = { horizontal: 'center' };
+      worksheet.getCell(2, i + 1).border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
     }
 
     // Add data rows
@@ -240,7 +241,7 @@ const EmployeeAttendance = () => {
     // Cleanup
     URL.revokeObjectURL(url);
     document.body.removeChild(a);
-};
+  };
 
 
 
@@ -253,21 +254,31 @@ const EmployeeAttendance = () => {
           </CCardHeader>
           <CCardBody>
             <CRow className='mb-4'>
-              <CCol xs={6} sm={6} xl={3} style={{marginTop: '5px'}}>
-                <CDropdown>
-                  <CDropdownToggle
-                    color="secondary" caret >
-                    {selectedMonthYear}
-                  </CDropdownToggle>
-                  <CDropdownMenu
-                    onClick={handleMonthChange} style={{cursor: 'pointer'}}>
-                    <CDropdownItem value="">select month</CDropdownItem>
-                    {months}
-                  </CDropdownMenu>
-                </CDropdown>
+              <CCol xs={6} sm={6} xl={3} style={{ marginTop: '5px' }}>
+                <CTooltip
+                  content="Select month"
+                  trigger={['hover']}
+                >
+                  <CDropdown>
+                    <CDropdownToggle
+                      color="secondary" caret >
+                      {selectedMonthYear}
+                    </CDropdownToggle>
+                    <CDropdownMenu
+                      onClick={handleMonthChange} style={{ cursor: 'pointer' }}>
+                      <CDropdownItem value="">select month</CDropdownItem>
+                      {months}
+                    </CDropdownMenu>
+                  </CDropdown>
+                </CTooltip>
               </CCol>
-              <CCol xs={6} sm={6} xl={9} style={{marginTop: '5px'}}>
-                <CButton color="success" onClick={handleFullReport}>Generate</CButton>
+              <CCol xs={6} sm={6} xl={9} style={{ marginTop: '5px' }}>
+                <CTooltip
+                  content="Show report"
+                  trigger={['hover']}
+                >
+                  <CButton color="success" onClick={handleFullReport}>Generate</CButton>
+                </CTooltip>
               </CCol>
             </CRow>
             <CRow className='mb-4' style={{ overflowX: 'auto', textAlign: 'center' }}>
@@ -301,7 +312,12 @@ const EmployeeAttendance = () => {
             </CRow>
             <CRow>
               <CCol>
-                <CButton align="middle" color="success" onClick={downloadTableAsXLSX}>Export</CButton>
+                <CTooltip
+                  content="Download table"
+                  trigger={['hover']}
+                >
+                  <CButton align="middle" color="success" onClick={downloadTableAsXLSX}>Export</CButton>
+                  </CTooltip>
               </CCol>
             </CRow>
           </CCardBody>

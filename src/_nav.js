@@ -2,19 +2,11 @@ import React from 'react'
 import CIcon from '@coreui/icons-react'
 import {
   cilAddressBook,
-  cilCalculator,
   cilCalendar,
-  cilCalendarCheck,
-  cilCursor,
-  cilDescription,
-  cilDrop,
-  cilNotes,
-  cilPencil,
-  cilPuzzle,
-  cilSpeedometer,
-  cilStar,
+  cilCalendarCheck, 
+  cilSpeedometer, 
 } from '@coreui/icons'
-import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
+import { CNavItem } from '@coreui/react'
 
 const _nav = [
   {
@@ -32,7 +24,7 @@ const _nav = [
   {
     component: CNavItem,
     name: 'Employee Attendance',
-    to: '/employee',
+    to: '/employee-attendance',
     icon: <CIcon icon={cilAddressBook} customClassName="nav-icon" />,
   },
   {

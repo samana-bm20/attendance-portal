@@ -11,6 +11,7 @@ const Attendance = () => {
   const user = useSelector((state) => state.user);
   const [calendarData, setCalendarData] = useState([]);
   const [leaveRecords, setLeaveRecords] = useState([]);
+  const [holidays, setHolidays] = useState([]);
   const [workingDays, setWorkingDays] = useState(0);
   const [presentDays, setPresentDays] = useState(0);
   const [absentDays, setAbsentDays] = useState(0);
@@ -59,6 +60,18 @@ const Attendance = () => {
   };
 
   useEffect(() => {
+    const fetchHolidayRecord = async () => {
+      try {
+        const response = await axios.get(`${Config.apiUrl}/holiday`);
+        setHolidays(response.data.data);
+      } catch {
+        console.error("error fetching public holidays.");
+      }
+    };
+    fetchHolidayRecord();
+  }, []);
+
+  useEffect(() => {
     const fetchLeaveRecord = async () => {
       try {
         const response = await axios.get(`${Config.apiUrl}/fetch?empname=${user?.name}`);
@@ -77,45 +90,48 @@ const Attendance = () => {
       year: 'numeric'
     }).replace(/ /g, '-');
     const record = calendarData.find(item => item.date === formattedDate);
+    const holidayRecord = holidays.find(holiday => holiday.Date === formattedDate);
     const leaveRecord = leaveRecords.find(record => (
       new Date(formattedDate) >= new Date(record.FromDate) &&
       new Date(formattedDate) <= new Date(record.ToDate) && record.Status === 'Approved'));
 
-    if (leaveRecord) {
+    if (holidayRecord) {
+      return 'holiday';
+    } else if (leaveRecord) {
       const { FirstHalf, SecondHalf, FromDate, ToDate } = leaveRecord;
-        if(FirstHalf) {
-          if(formattedDate == ToDate) {
-            if (record) {
-              const { time } = record;
-              if ((parseInt(time.split(':')[0]) < 2 && time.includes('PM'))) {
-                return 'firstPresent';
-              } else {
-                return 'firstAbsent';
-              }
+      if (FirstHalf) {
+        if (formattedDate == ToDate) {
+          if (record) {
+            const { time } = record;
+            if ((parseInt(time.split(':')[0]) < 2 && time.includes('PM'))) {
+              return 'firstPresent';
             } else {
-              return 'firsthalf';
+              return 'firstAbsent';
             }
           } else {
-            return 'approved';
-          }
-        } else if (SecondHalf) {
-          if(formattedDate == FromDate) {
-            if (record) {
-              const { time } = record;
-              if ((parseInt(time.split(':')[0]) < 10 && time.includes('AM'))) {
-                return 'secondPresent';
-              } else {
-                return 'secondAbsent';
-              }
-            } else {
-              return 'secondhalf';
-            }
-          } else {
-            return 'approved';
+            return 'firsthalf';
           }
         } else {
           return 'approved';
         }
+      } else if (SecondHalf) {
+        if (formattedDate == FromDate) {
+          if (record) {
+            const { time } = record;
+            if ((parseInt(time.split(':')[0]) < 10 && time.includes('AM'))) {
+              return 'secondPresent';
+            } else {
+              return 'secondAbsent';
+            }
+          } else {
+            return 'secondhalf';
+          }
+        } else {
+          return 'approved';
+        }
+      } else {
+        return 'approved';
+      }
     } else if (record) {
       const { time } = record;
       if (time === 'OFF') {
@@ -176,12 +192,12 @@ const Attendance = () => {
           <CCard className="mb-4">
             <CCardHeader>Calendar</CCardHeader>
             <CCardBody>
-              <CRow > 
-                <CCol xs={12} sm={8} xl={8} xxl={8} style={{marginBottom: '5px', display: 'flex', justifyContent: 'center'}}>
+              <CRow >
+                <CCol xs={12} sm={8} xl={8} xxl={8} style={{ marginBottom: '5px', display: 'flex', justifyContent: 'center' }}>
                   <Calendar tileClassName={coloredDays} />
                 </CCol>
-                <CCol xs={12} sm={4} xl={4} xxl={4} style={{display: 'flex', justifyContent: 'center'}}>
-                  <CCard className='p-2' style={{justifyContent: 'center'}}>
+                <CCol xs={12} sm={4} xl={4} xxl={4} style={{ display: 'flex', justifyContent: 'center' }}>
+                  <CCard className='p-2' style={{ justifyContent: 'center' }}>
                     <CRow className='p-1'>
                       <div>
                         <span
@@ -225,6 +241,15 @@ const Attendance = () => {
                           style={{ backgroundColor: 'lightskyblue' }}>
                         </span>
                         <span className='color-meaning'>Leave</span>
+                      </div>
+                    </CRow>
+                    <CRow className='p-1'>
+                      <div>
+                        <span
+                          className='color-represent'
+                          style={{ backgroundColor: '#d981d9' }}>
+                        </span>
+                        <span className='color-meaning'>Holiday</span>
                       </div>
                     </CRow>
                   </CCard>

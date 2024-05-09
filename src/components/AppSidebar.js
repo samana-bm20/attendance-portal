@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react'
+import React, { useEffect, useContext, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
 import {
@@ -11,14 +11,15 @@ import {
   CDropdownItem,
   CRow,
   CCol,
+  CTooltip,
 } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
 import UserContext from '../context/UserContext'
 import UserContextProvider from '../context/UserContextProvider'
 import { AppSidebarNav } from './AppSidebarNav'
-
+import axios from 'axios';
 import logo from 'src/assets/MLInfomap.png'
 import logoname from 'src/assets/logoname.png'
+import Config from "../Config";
 
 // sidebar nav config
 import navigation from '../_nav'
@@ -28,10 +29,13 @@ const AppSidebar = () => {
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
   const { setMonths } = useContext(UserContext);
+  const { employeeNames, setEmployeeNames } = useContext(UserContext);
   const currentDate = new Date();
   const year = currentDate.getFullYear();
 
+
   useEffect(() => {
+    console.log(sidebarShow);
     const setMonth = (year) => {
       const options = [];
 
@@ -60,6 +64,23 @@ const AppSidebar = () => {
     setMonth(year);
   }, [year]);
 
+  useEffect(() => {
+    const fetchEmployeeNames = async () => {
+      try {
+        const response = await axios.get(`${Config.apiUrl}/empname`);
+        let names = response.data.data.map(employee => employee.name);
+        const empNames = [];
+        for (let i = 0; i < names.length; i++) {
+          empNames.push(<CDropdownItem key={`${i}-${names[i]}`} value={names[i]}>{names[i]}</CDropdownItem>);
+        }
+        setEmployeeNames(empNames);
+      } catch {
+        console.error("error fetching employee names.");
+      }
+    };
+    fetchEmployeeNames();
+  }, []);
+
   return (
     <UserContextProvider>
       <CSidebar
@@ -69,7 +90,7 @@ const AppSidebar = () => {
         unfoldable={unfoldable}
         visible={sidebarShow}
         onVisibleChange={(visible) => {
-          dispatch({ type: 'set', sidebarShow: visible })
+          dispatch({ type: 'set', sidebarShow: visible });
         }}
       >
         <CSidebarHeader className="border-bottom">
@@ -84,12 +105,15 @@ const AppSidebar = () => {
                   }} />
               </CCol>
               <CCol>
-              <img src={logoname} alt='Company'
-                  style={{
-                    backgroundColor: 'white',
-                    padding: '5px', borderRadius: '5px',
-                    width: '150px', height: '40px'
-                  }} />
+                {!unfoldable && (
+                  <img src={logoname} alt='Company'
+                    style={{
+                      backgroundColor: 'white',
+                      padding: '5px', borderRadius: '5px',
+                      width: '150px', height: '40px'
+                    }} />
+                )}
+
               </CCol>
             </CRow>
           </CSidebarBrand>
@@ -101,9 +125,14 @@ const AppSidebar = () => {
         </CSidebarHeader>
         <AppSidebarNav items={navigation} />
         <CSidebarFooter className="border-top d-none d-lg-flex">
-          <CSidebarToggler
-            onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
-          />
+          <CTooltip
+            content="Collapse sidebar"
+            trigger={['hover']}
+          >
+            <CSidebarToggler
+              onClick={() => dispatch({ type: 'set', sidebarUnfoldable: !unfoldable })}
+            />
+          </CTooltip>
         </CSidebarFooter>
       </CSidebar>
     </UserContextProvider>

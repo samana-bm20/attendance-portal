@@ -1,6 +1,5 @@
 import AdminAppContent from './AdminAppContent'
 import UserAppContent from './UserAppContent'
-import SupperAdminAppContent from './SupperAdminAppContent'
 import AppFooter from './AppFooter'
 import AppHeader from './AppHeader'
 import AppSidebar from './AppSidebar'
@@ -11,7 +10,6 @@ import DocsExample from './DocsExample'
 export {
   UserAppContent,
   AdminAppContent,
-  SupperAdminAppContent,
   AppFooter,
   AppHeader,
   AppSidebar,

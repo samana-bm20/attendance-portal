@@ -1,6 +1,7 @@
-import React, { Suspense, useEffect } from 'react'
-import { HashRouter, Route, Routes } from 'react-router-dom'
-import UserContextProvider from './context/UserContextProvider'
+// Inside your App component
+import React, { Suspense, useEffect, useState } from 'react';
+import { HashRouter, Route, Routes } from 'react-router-dom';
+import UserContextProvider from './context/UserContextProvider';
 import { useSelector, useDispatch } from "react-redux";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -9,11 +10,12 @@ import './scss/style.scss';
 import Config from "./Config";
 import '@babel/polyfill';
 import moment from "moment";
-// Containers
 import { useIdleTimer } from "react-idle-timer";
+
+// Containers
 import Admin from './layout/Admin';
-import SupperAdmin from './layout/SupperAdmin';
 import User from './layout/User';
+
 // Pages
 const Login = React.lazy(() => import('./components/views/pages/login/Login'));
 const Register = React.lazy(() => import('./components/views/pages/register/Register'));
@@ -22,7 +24,7 @@ const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme');
   const storedTheme = useSelector((state) => state.theme);
 
-  const user = useSelector((state) => state.UserReducer.user);
+  const user = useSelector((state) => state.user);
 
   const dispatch = useDispatch();
 
@@ -58,6 +60,22 @@ const App = () => {
 
     setColorMode(storedTheme)
   }, [])
+
+  // Accessing remaining idle time
+  const remainingIdleTime = getRemainingTime();
+
+  useEffect(() => {
+    if (remainingIdleTime !== null) {
+      // Do something with the remaining idle time
+      console.log("Remaining idle time:", remainingIdleTime);
+      // Example: Display a countdown or perform an action when idle time is low
+      if (remainingIdleTime <= 10000) {
+        // Example action when idle time is less than or equal to 10 seconds (10,000 milliseconds)
+        console.log("Idle time is low, take action...");
+      }
+    }
+  }, [remainingIdleTime]);
+
   if (!user)
     return (
       <UserContextProvider>
@@ -107,23 +125,15 @@ const App = () => {
       >
         <Routes>
           <Route path="/login" element={<Login />} />
-
-          {/* Finance */}
-          {user?.userType == 2 && (
+          {/* Admin */}
+          {user?.userType == 1 && (
             <>
               <Route path="*" name="Home" element={<Admin />} />
             </>
           )}
 
-          {/* Admin */}
-          {user?.userType == 1 && (
-            <>
-              <Route path="*" name="Home" element={<SupperAdmin />} />
-            </>
-          )}
-
-          {/* Ops */}
-          {user?.userType == 3 && (
+          {/* User */}
+          {user?.userType == 2 && (
             <>
               <Route path="*" name="Home" element={<User />} />
             </>
@@ -135,4 +145,4 @@ const App = () => {
   );
 }
 
-export default App
+export default App;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react"
+import React, { useState, useEffect, useMemo, useContext } from "react"
 import { useSelector } from "react-redux";
 import {
   CCard,
@@ -24,6 +24,10 @@ import {
   CModalHeader,
   CModalTitle,
   CTooltip,
+  CDropdown,
+  CDropdownToggle,
+  CDropdownMenu,
+  CDropdownItem,
 } from '@coreui/react'
 import {
   cilTrash,
@@ -34,16 +38,21 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import CIcon from "@coreui/icons-react";
 import Pagination from "./Pagination";
+import UserContext from '../../../context/UserContext';
 let PageSize = 10;
 
 const LeavePage = () => {
   const user = useSelector((state) => state.user);
+  const { employeeNames } = useContext(UserContext);
   const [checkStatusPending, setCheckStatusPending] = useState('');
   const [showPullback, setShowPullback] = useState(false);
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showLateDialog, setShowLateDialog] = useState(false);
+  const [empID, setEmpID] = useState('');
+  const [empName, setEmpName] = useState('Employee Name');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
@@ -54,6 +63,7 @@ const LeavePage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [secondHalf, setSecondHalf] = useState(0.5);
   const [firstHalf, setFirstHalf] = useState(0.5);
+
   const fetchLeaveRequests = async (page) => {
     try {
       const response = await axios.get(`${Config.apiUrl}/pending`, {
@@ -100,6 +110,16 @@ const LeavePage = () => {
     setReason(event.target.value);
   });
 
+  const handleNameChange = (async (event) => {
+    setEmpName(event.target.text);
+    if (event.target.text === 'Employee Name') {
+      setEmpID('Employee ID')
+    } else {
+      const response = await axios.get(`${Config.apiUrl}/empid?name=${event.target.text}`);
+      setEmpID(response.data.data);
+    }
+  });
+
   const handleRejectReasonChange = ((event) => {
     setRejectReason(event.target.value);
   });
@@ -136,12 +156,11 @@ const LeavePage = () => {
       toast.error("Error in rejecting leave.", { autoClose: 3000 });
 
     }
-
   }
 
   const handleCancel = async () => {
     if (!rejectReason) {
-      toast.info("Please select a reason for pullback for cancellation.", { autoClose: 3000 });
+      toast.info("Please enter reason for deleting leave request.", { autoClose: 3000 });
       return;
     }
     try {
@@ -155,9 +174,9 @@ const LeavePage = () => {
       handleModelCancel(false);
       fetchLeaveRequests();
       setRejectReason('');
-      toast.success("Leave Pull back letter from employee.", { autoClose: 3000 });
+      toast.success("Leave request deleted successfully.", { autoClose: 3000 });
     } catch {
-      toast.error("Error in updating rejection status.", { autoClose: 3000 });
+      toast.error("Error in deleting leave request.", { autoClose: 3000 });
 
     }
 
@@ -229,7 +248,8 @@ const LeavePage = () => {
         "reason": reason,
         "firstHalf": firstHalf,
         "secondHalf": secondHalf,
-        "NoOfLeave": NoOfLeave
+        "NoOfLeave": NoOfLeave,
+        "status": 'Pending'
       };
 
 
@@ -247,8 +267,90 @@ const LeavePage = () => {
     }
   };
 
+  const handleLateAdd = async () => {
+    try {
+      if (!empID) {
+        toast.info("Please enter employee ID.", { autoClose: 3000 });
+        return;
+      }
+      if (!empName) {
+        toast.info("Please enter employee name.", { autoClose: 3000 });
+        return;
+      }
+      if (!startDate) {
+        toast.info("Please enter start date.", { autoClose: 3000 });
+        return;
+      }
+      if (!endDate) {
+        toast.info("Please enter end date.", { autoClose: 3000 });
+        return;
+      }
+      let firstHalf = 'No';
+      let secondHalf = 'No';
+      let NoOfLeave = 0;
+      if (firstHalfChecked == true) {
+        firstHalf = 'Yes';
+        secondHalf = 'No';
+        NoOfLeave = calculateDays(startDate, endDate, .5);
+      }
+      else if (secondHalfChecked == true) {
+        secondHalf = 'Yes';
+        firstHalf = 'No';
+        NoOfLeave = calculateDays(startDate, endDate, .5);
+      }
+      else if (secondHalfChecked == true && firstHalfChecked == true) {
+        firstHalf = 'Yes';
+        secondHalf = 'Yes';
+        NoOfLeave = calculateDays(startDate, endDate, 0);
+      }
+      else {
+        firstHalf = 'No';
+        secondHalf = 'No';
+        NoOfLeave = calculateDays(startDate, endDate, 1);
+      }
+debugger
+      const params = {
+        "EmpID": empID,
+        "empName": empName,
+        "fromDate": startDate,
+        "toDate": endDate,
+        "reason": 'LATE LEAVE',
+        "firstHalf": firstHalf,
+        "secondHalf": secondHalf,
+        "NoOfLeave": NoOfLeave,
+        "status": 'Approved'
+      };
+
+
+      const response = await axios.post(`${Config.apiUrl}/addleave`, params);
+      console.log(response.data);
+      setShowLateDialog(false);
+
+      fetchLeaveRequests();
+      setEmpID('');
+      setEmpName('');
+      setStartDate('');
+      setEndDate('');
+      toast.success("Late leave added successfully.", { autoClose: 3000 });
+    } catch (error) {
+      toast.error("Error in late leave submission." + error, { autoClose: 3000 });
+    }
+  };
+
+  const handleLateCancel = () => {
+    setEmpID('');
+    setEmpName('Employee Name');
+    setStartDate('');
+    setEndDate('');
+    setShowLateDialog(false);
+  };
+
   const handleAddCancel = () => {
     setShowAddDialog(false);
+  };
+
+  const openLateModal = () => {
+    setShowLateDialog(true);
   };
 
   const openModal = () => {
@@ -261,7 +363,6 @@ const LeavePage = () => {
       const endDt = new Date(end);
       const diffTime = Math.abs(endDt - startDt);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      //setDaysCount(diffDays);
       return diffDays + count;
     }
   };
@@ -280,6 +381,20 @@ const LeavePage = () => {
           <CCard className="mb-4">
             <CCardHeader style={{ display: 'flex' }}>Leave
               <div className="leave-status" style={{ position: 'absolute', right: '10px', top: '-3px' }}>
+                {user?.userType == 1 && (
+                  <CTooltip
+                    content="Add late leave"
+                    trigger={['hover']}
+                  >
+                    <CButton
+                      color="primary"
+                      type="button"
+                      className="reject-btn mb-2 mx-2"
+                      onClick={openLateModal}>
+                      Late Leave
+                    </CButton>
+                  </CTooltip>
+                )}
                 <CTooltip
                   content="Apply leave"
                   trigger={['hover']}
@@ -287,12 +402,127 @@ const LeavePage = () => {
                   <CButton
                     color="primary"
                     type="button"
-                    className="reject-btn"
+                    className="reject-btn mb-2 mx-2"
                     onClick={openModal}>
                     Leave Request
                   </CButton>
                 </CTooltip>
               </div>
+              <CModal visible={showLateDialog} onClose={handleLateCancel}>
+                <CModalHeader>
+                  <CModalTitle>Late Leave</CModalTitle>
+                </CModalHeader>
+                <CModalBody>
+                  <CForm>
+                    <CRow className="g-3">
+                      <CCol xs style={{ marginBottom: '5px' }}>
+                        <CFormLabel id="inputGroupPrepend03">Employee ID</CFormLabel>
+                        <CFormInput
+                          type="text"
+                          id="EmpID"
+                          name='EmpID'
+                          placeholder="Employee ID"
+                          value={empID}
+                          disabled
+                        />
+                      </CCol>
+                      <CCol xs>
+                        <CFormLabel id="inputGroupPrepend03">Employee Name</CFormLabel>
+                        {/* <CFormInput
+                          type="text"
+                          placeholder="Employee Name"
+                          id="EmpID"
+                          name='EmpID'
+                          onChange={handleNameChange}
+                        /> */}
+
+                        <div>
+                          <CDropdown>
+                            <CDropdownToggle
+                              color="secondary" caret >
+                              {empName}
+                            </CDropdownToggle>
+                            <CDropdownMenu
+                              placeholder="Employee Name"
+                              id="EmpID"
+                              name='EmpID'
+                              onClick={handleNameChange} style={{ cursor: 'pointer' }}>
+                              <CDropdownItem value="">Employee Name</CDropdownItem>
+                              {employeeNames}
+                            </CDropdownMenu>
+                          </CDropdown>
+                        </div>
+                      </CCol>
+                    </CRow>
+                    <CRow className="g-3">
+                      <CCol xs style={{ marginBottom: '5px' }}>
+                        <CFormLabel id="inputGroupPrepend03">Leave Start Date</CFormLabel>
+                        <CFormInput
+                          type="date"
+                          id="StartDate"
+                          name='StartDate'
+                          onChange={handlStartDateChange}
+                          placeholder="Leave Start Date"
+
+                        />
+                      </CCol>
+                      <CCol xs>
+                        <CFormLabel id="inputGroupPrepend03">Leave End Date</CFormLabel>
+                        <CFormInput
+                          type="date"
+                          placeholder="Leave End Date"
+                          onChange={handleEndDateChange}
+                          min={startDate}
+                          id="EndDate"
+                          name='EndDate'
+
+                        />
+                      </CCol>
+                    </CRow>
+                    <CRow className="g-3">
+
+                      <CCol xs>
+                        <CFormCheck
+                          inline
+                          id="inlineCheckbox2"
+                          value="Yes"
+                          label="Second Half"
+                          checked={secondHalfChecked}
+                          onChange={handleSecondHalfChange}
+                        />
+                      </CCol>
+                      <CCol xs style={{ marginBottom: '5px' }}>
+                        <CFormCheck
+                          inline
+                          id="inlineCheckbox1"
+                          value="Yes"
+                          label="First Half"
+                          checked={firstHalfChecked}
+                          onChange={handleFirstHalfChange}
+                        />
+                      </CCol>
+                    </CRow>
+                    <div className="mb-3">
+                      <CFormLabel htmlFor="exampleFormControlTextarea1">Reason</CFormLabel>
+                      <CFormTextarea
+                        id="exampleFormControlTextarea1"
+                        rows={3}
+                        placeholder="Reason"
+                        name="reason"
+                        defaultValue="LATE LEAVE"
+                        disabled
+
+                      ></CFormTextarea>
+                    </div>
+                  </CForm>
+                </CModalBody>
+                <CModalFooter>
+                  <CButton color="secondary" onClick={handleLateCancel}>
+                    Cancel
+                  </CButton>
+                  <CButton color="primary" onClick={handleLateAdd}>Submit</CButton>
+                </CModalFooter>
+              </CModal>
               <CModal visible={showAddDialog} onClose={handleAddCancel}>
                 <CModalHeader>
                   <CModalTitle>Mark Leave</CModalTitle>
@@ -301,12 +531,12 @@ const LeavePage = () => {
                   <CForm>
                     <CRow className="g-3">
                       <CCol xs style={{ marginBottom: '5px' }}>
-                        <CFormLabel id="inputGroupPrepend03">Employee Id</CFormLabel>
+                        <CFormLabel id="inputGroupPrepend03">Employee ID</CFormLabel>
                         <CFormInput
                           type="text"
                           id="EmpID"
                           name='EmpID'
-                          placeholder="Employee Id"
+                          placeholder="Employee ID"
                           defaultValue={user?.empid}
                           disabled
                         />

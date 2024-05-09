@@ -40,7 +40,7 @@ const Login = () => {
       toast.error("Please enter both username and password.");
       return;
     }
-
+    
     try {
       const response = await axios.get(
         `${Config.apiUrl}/login`,
@@ -52,24 +52,7 @@ const Login = () => {
           },
         }
       );
-
-      // if (response.data.status === "OK") {
-      //   let params = {
-      //     username: username,
-      //     fullname: response.data.data[0].name,
-      //     empid: response.data.data[0].empid,
-      //   };
-
-      //   const recordResponse = await axios.post(`${Config.apiUrl}/record`, params);
-      //   if (recordResponse.data.status === 'OK') {
-      //     const expireAt = moment()
-      //       .add(Config.sessionExpiredTime, "minutes")
-      //       .valueOf();
-      //     const realData = { ...response.data.data, expireAt };
-      //     dispatch(Save_User(realData));
-      //     navigate("/dashboard");
-      //   }
-      // } 
+      
       if (response.data.status === "OK") {
         const expireAt = moment()
           .add(Config.sessionExpiredTime, "minutes")

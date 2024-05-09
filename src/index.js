@@ -5,7 +5,7 @@ import { Provider } from 'react-redux';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { HashRouter } from 'react-router-dom';
 import App from './App';
-import store from './Redux/store';
+import store from './store';
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -14,7 +14,7 @@ import {
 } from '@coreui/react'
 
 const MainChart = () => {
-  const user = useSelector((state) => state.UserReducer.user);
+  const user = useSelector((state) => state.user);
   const [leavesUsed, setLeavesUsed] = useState(0);
   const [approvedCount, setApprovedCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);

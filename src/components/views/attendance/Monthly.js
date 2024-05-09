@@ -106,8 +106,14 @@ const Monthly = () => {
             console.log(response.data.data);
             const updatedAttendanceData = await Promise.all(response.data.data.map(async (record) => {
                 if (record.time === null) {
-                    const allAbsent = await checkAllAbsent(record.date);
-                    return { ...record, time: allAbsent ? 'OFF' : 'Absent' };
+                    const holiday = await axios.get(`${Config.apiUrl}/holiday`);
+                    const holidayDate = holiday.data.data.find((holiday) => holiday.Date === record.date);
+                    if (holidayDate) {
+                        return { ...record, time: <b>{holidayDate.HolidayName}</b> };
+                    } else {
+                        const allAbsent = await checkAllAbsent(record.date);
+                        return { ...record, time: allAbsent ? 'OFF' : 'Absent' };
+                    }
                 }
                 return record;
             }));
@@ -128,8 +134,14 @@ const Monthly = () => {
                 const response = await axios.get(`${Config.apiUrl}/month?username=${user?.username}&month=${currentMonth}&year=${currentYear}`);
                 const updatedAttendanceData = await Promise.all(response.data.data.map(async (record) => {
                     if (record.time === null) {
-                        const allAbsent = await checkAllAbsent(record.date);
-                        return { ...record, time: allAbsent ? 'OFF' : 'Absent' };
+                        const holiday = await axios.get(`${Config.apiUrl}/holiday`);
+                        const holidayDate = holiday.data.data.find((holiday) => holiday.Date === record.date);
+                        if (holidayDate) {
+                            return { ...record, time: holidayDate.HolidayName };
+                        } else {
+                            const allAbsent = await checkAllAbsent(record.date);
+                            return { ...record, time: allAbsent ? 'OFF' : 'Absent' };
+                        }
                     }
                     return record;
                 }));
@@ -286,11 +298,11 @@ const Monthly = () => {
                     </CTable>
                     <CRow>
                         <CCol>
-                        <CTooltip
+                            <CTooltip
                                 content="Download table"
                                 trigger={['hover']}
                             >
-                            <CButton align="middle" color="success" onClick={downloadTableAsXLSX}>Export</CButton>
+                                <CButton align="middle" color="success" onClick={downloadTableAsXLSX}>Export</CButton>
                             </CTooltip>
                         </CCol>
                     </CRow>
