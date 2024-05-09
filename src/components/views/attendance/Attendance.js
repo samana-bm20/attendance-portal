@@ -103,7 +103,7 @@ const Attendance = () => {
         if (formattedDate == ToDate) {
           if (record) {
             const { time } = record;
-            if ((parseInt(time.split(':')[0]) < 2 && time.includes('PM'))) {
+            if ((parseInt(time.split(':')[0]) < 2 || time.includes('AM'))) {
               return 'firstPresent';
             } else {
               return 'firstAbsent';
