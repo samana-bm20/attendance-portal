@@ -247,7 +247,7 @@ const Monthly = () => {
                                         {selectedMonthYear}
                                     </CDropdownToggle>
                                     <CDropdownMenu
-                                        onClick={handleMonthChange} style={{ cursor: 'pointer' }}>
+                                        onClick={handleMonthChange} style={{ cursor: 'pointer', overflowY: 'scroll', maxHeight: '200px' }}>
                                         <CDropdownItem value="">select month</CDropdownItem>
                                         {months}
                                     </CDropdownMenu>

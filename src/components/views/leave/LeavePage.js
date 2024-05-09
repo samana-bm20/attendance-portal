@@ -446,7 +446,7 @@ debugger
                               placeholder="Employee Name"
                               id="EmpID"
                               name='EmpID'
-                              onClick={handleNameChange} style={{ cursor: 'pointer' }}>
+                              onClick={handleNameChange} style={{ cursor: 'pointer', overflowY: 'scroll', maxHeight: '200px' }}>
                               <CDropdownItem value="">Employee Name</CDropdownItem>
                               {employeeNames}
                             </CDropdownMenu>
