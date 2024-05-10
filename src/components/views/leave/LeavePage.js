@@ -308,7 +308,7 @@ const LeavePage = () => {
         secondHalf = 'No';
         NoOfLeave = calculateDays(startDate, endDate, 1);
       }
-debugger
+      debugger
       const params = {
         "EmpID": empID,
         "empName": empName,
@@ -770,6 +770,10 @@ debugger
                                             trigger={['hover']}
                                           >
                                             <CIcon icon={cilTrash} style={{ color: 'red', cursor: 'pointer' }}
+                                              onClick={() => {
+                                                setSelectedRequest(request);
+                                                setShowPullback(true);
+                                              }}
                                             ></CIcon>
                                           </CTooltip>
                                         </div>
