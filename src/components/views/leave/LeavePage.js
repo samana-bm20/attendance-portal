@@ -38,6 +38,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import CIcon from "@coreui/icons-react";
 import Pagination from "./Pagination";
+import BarChart from "./BarChart";
 import UserContext from '../../../context/UserContext';
 let PageSize = 10;
 
@@ -53,17 +54,22 @@ const LeavePage = () => {
   const [showLateDialog, setShowLateDialog] = useState(false);
   const [empID, setEmpID] = useState('');
   const [empName, setEmpName] = useState('Employee Name');
+  const [rangeStartDate, setRangeStartDate] = useState('');
+  const [rangeEndDate, setRangeEndDate] = useState('');
+  const [relaxationTime, setRelaxationTime] = useState('');
+  const [lateRecord, setLateRecord] = useState('');
+  const [lateEnd, setLateEnd] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
+  const [approveReason, setApproveReason] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [halfDayChecked, setHalfDayChecked] = useState(false);
   const [firstHalfChecked, setFirstHalfChecked] = useState(false);
   const [secondHalfChecked, setSecondHalfChecked] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [secondHalf, setSecondHalf] = useState(0.5);
-  const [firstHalf, setFirstHalf] = useState(0.5);
-
+  
   const fetchLeaveRequests = async (page) => {
     try {
       const response = await axios.get(`${Config.apiUrl}/pending`, {
@@ -83,124 +89,52 @@ const LeavePage = () => {
       console.error("error fetching pending requests");
     }
   };
-
-
+ 
   useEffect(() => {
-    fetchLeaveRequests(currentPage); // Pass currentPage to fetch the appropriate page
+    fetchLeaveRequests(currentPage);
   }, [currentPage]);
 
-  const handleApprove = async () => {
+  const currentTableData = useMemo(() => {
+    const firstPageIndex = (currentPage - 1) * PageSize;
+    const lastPageIndex = firstPageIndex + PageSize;
+    return leaveRequests.slice(firstPageIndex, lastPageIndex);
+  }, [leaveRequests, currentPage]);
 
-    try {
-      let params = {
-        "EmpID": user?.empid,
-        "Id": selectedRequest.id
-      }
-      const response = await axios.put(`${Config.apiUrl}/approve`, params);
-      console.log(response.data);
-      setShowApproveDialog(false);
-      fetchLeaveRequests();
-      toast.success("Leave approved successfully.", { autoClose: 3000 });
-    } catch {
-      toast.error("Error in approving leave.", { autoClose: 3000 });
+  const calculateDays = (start, end, count) => {
+    if (start && end) {
+      const startDt = new Date(start);
+      const endDt = new Date(end);
+      const diffTime = Math.abs(endDt - startDt);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays + count;
     }
-  }
+  };
 
-  const handleReasonChange = ((event) => {
-    setReason(event.target.value);
-  });
+  //#region Add Leave
 
-  const handleNameChange = (async (event) => {
-    setEmpName(event.target.text);
-    if (event.target.text === 'Employee Name') {
-      setEmpID('Employee ID')
-    } else {
-      const response = await axios.get(`${Config.apiUrl}/empid?name=${event.target.text}`);
-      setEmpID(response.data.data);
-    }
-  });
+  const openModal = () => {
+    setShowAddDialog(true);
+  };
 
-  const handleRejectReasonChange = ((event) => {
-    setRejectReason(event.target.value);
-  });
-
-  const handleCancelReasonChange = ((event) => {
-    setRejectReason(event.target.value);
-  });
-
-  const handlStartDateChange = ((event) => {
+  const handleStartDateChange = ((event) => {
     setStartDate(event.target.value);
   });
+
   const handleEndDateChange = ((event) => {
     setEndDate(event.target.value);
   });
 
-  const handleReject = async () => {
-    if (!rejectReason) {
-      toast.info("Please enter reason for rejection.", { autoClose: 3000 });
-      return;
-    }
-    try {
-      let params = {
-        "rejectedCancel": 'Rejected',
-        "Id": selectedRequest.id,
-        "rejectReason": rejectReason
-      }
-      const response = await axios.put(`${Config.apiUrl}/reject`, params);
-      console.log(response.data);
-      setShowRejectDialog(false);
-      fetchLeaveRequests();
-      setRejectReason('');
-      toast.success("Leave rejected successfully.", { autoClose: 3000 });
-    } catch {
-      toast.error("Error in rejecting leave.", { autoClose: 3000 });
-
-    }
-  }
-
-  const handleCancel = async () => {
-    if (!rejectReason) {
-      toast.info("Please enter reason for deleting leave request.", { autoClose: 3000 });
-      return;
-    }
-    try {
-      let params = {
-        "rejectedCancel": 'Pullback',
-        "Id": selectedRequest.id,
-        "rejectReason": rejectReason
-      }
-      const response = await axios.put(`${Config.apiUrl}/reject`, params);
-      console.log(response.data);
-      handleModelCancel(false);
-      fetchLeaveRequests();
-      setRejectReason('');
-      toast.success("Leave request deleted successfully.", { autoClose: 3000 });
-    } catch {
-      toast.error("Error in deleting leave request.", { autoClose: 3000 });
-
-    }
-
-  }
-
-  const handleModelCancel = () => {
-    setShowPullback(false);
-    setRejectReason('');
-  }
-
-  const handleRejectCancel = () => {
-    setShowRejectDialog(false);
-    setRejectReason('');
-  }
-
   const handleFirstHalfChange = (event) => {
-    //setFirstHalf(0.5);
     setFirstHalfChecked(event.target.checked);
   };
 
   const handleSecondHalfChange = (event) => {
-    //setSecondHalf(0.5);
     setSecondHalfChecked(event.target.checked);
   };
+
+  const handleReasonChange = ((event) => {
+    setReason(event.target.value);
+  });
 
   const handleAdd = async () => {
     try {
@@ -249,7 +183,8 @@ const LeavePage = () => {
         "firstHalf": firstHalf,
         "secondHalf": secondHalf,
         "NoOfLeave": NoOfLeave,
-        "status": 'Pending'
+        "status": 'Pending',
+        "remark": 'N/A',
       };
 
 
@@ -267,60 +202,131 @@ const LeavePage = () => {
     }
   };
 
+  const handleAddCancel = () => {
+    setShowAddDialog(false);
+  };
+
+  //#endregion
+
+  //#region Late Leave
+
+  const openLateModal = () => {
+    setShowLateDialog(true);
+  };
+
+  const handleNameChange = (async (event) => {
+    setEmpName(event.target.text);
+    if (event.target.text === 'Employee Name') {
+      setEmpID('Employee ID')
+      setRangeStartDate('')
+      setRangeEndDate('')
+      setRelaxationTime('')
+      setLateRecord('')
+    } else {
+      const response = await axios.get(`${Config.apiUrl}/empid?name=${event.target.text}`);
+      setEmpID(response.data.data);
+      const res = await axios.get(`${Config.apiUrl}/latecount`, {
+        params: {
+          empID: response.data.data,
+          fromDate: rangeStartDate,
+          toDate: rangeEndDate,
+          relaxationTime: relaxationTime,
+        }
+      });
+      setLateRecord(res.data.data[0].DaysWithLateLogin);
+    }
+  });
+
+  const handleRangeStartDate = (async (event) => {
+    setRangeStartDate(event.target.value);
+    const response = await axios.get(`${Config.apiUrl}/latecount`, {
+      params: {
+        empID: empID,
+        fromDate: event.target.value,
+        toDate: rangeEndDate,
+        relaxationTime: relaxationTime,
+      }
+    });
+    setLateRecord(response.data.data[0].DaysWithLateLogin);
+  });
+
+  const handleRangeEndDate = (async (event) => {
+    setRangeEndDate(event.target.value);
+    const response = await axios.get(`${Config.apiUrl}/latecount`, {
+      params: {
+        empID: empID,
+        fromDate: rangeStartDate,
+        toDate: event.target.value,
+        relaxationTime: relaxationTime,
+      }
+    });
+    setLateRecord(response.data.data[0].DaysWithLateLogin);
+  });
+  
+  const handleRelaxationTimeChange = (async (event) => {
+    setRelaxationTime(event.target.value);
+    const response = await axios.get(`${Config.apiUrl}/latecount`, {
+      params: {
+        empID: empID,
+        fromDate: rangeStartDate,
+        toDate: rangeEndDate,
+        relaxationTime: event.target.value,
+      }
+    });
+    setLateRecord(response.data.data[0].DaysWithLateLogin);
+  });
+
+  const handleLateEndDate = ((event) => {
+    setLateEnd(event.target.value);
+  });
+
+  const handleHalfDayChange = (event) => {
+    setHalfDayChecked(event.target.checked);
+  };
   const handleLateAdd = async () => {
     try {
-      if (!empID) {
-        toast.info("Please enter employee ID.", { autoClose: 3000 });
-        return;
-      }
       if (!empName) {
         toast.info("Please enter employee name.", { autoClose: 3000 });
         return;
       }
-      if (!startDate) {
-        toast.info("Please enter start date.", { autoClose: 3000 });
+      if (!rangeStartDate) {
+        toast.info("Please enter range start date.", { autoClose: 3000 });
         return;
       }
-      if (!endDate) {
-        toast.info("Please enter end date.", { autoClose: 3000 });
+      if (!rangeEndDate) {
+        toast.info("Please enter range end date.", { autoClose: 3000 });
         return;
       }
-      let firstHalf = 'No';
-      let secondHalf = 'No';
+      if (!relaxationTime) {
+        toast.info("Please enter relaxation time.", { autoClose: 3000 });
+        return;
+      }
+      if (!lateEnd) {
+        toast.info("Please enter late leave end date.", { autoClose: 3000 });
+        return;
+      }
+      let halfDay = 'No';
       let NoOfLeave = 0;
-      if (firstHalfChecked == true) {
-        firstHalf = 'Yes';
-        secondHalf = 'No';
-        NoOfLeave = calculateDays(startDate, endDate, .5);
-      }
-      else if (secondHalfChecked == true) {
-        secondHalf = 'Yes';
-        firstHalf = 'No';
-        NoOfLeave = calculateDays(startDate, endDate, .5);
-      }
-      else if (secondHalfChecked == true && firstHalfChecked == true) {
-        firstHalf = 'Yes';
-        secondHalf = 'Yes';
-        NoOfLeave = calculateDays(startDate, endDate, 0);
+      if (halfDayChecked == true) {
+        halfDay = 'Yes';
+        NoOfLeave = calculateDays(rangeStartDate, lateEnd, .5);
       }
       else {
-        firstHalf = 'No';
-        secondHalf = 'No';
-        NoOfLeave = calculateDays(startDate, endDate, 1);
+        halfDay = 'No';
+        NoOfLeave = calculateDays(rangeStartDate, lateEnd, 1);
       }
-      debugger
       const params = {
         "EmpID": empID,
         "empName": empName,
-        "fromDate": startDate,
-        "toDate": endDate,
+        "fromDate": rangeStartDate,
+        "toDate": lateEnd,
         "reason": 'LATE LEAVE',
-        "firstHalf": firstHalf,
-        "secondHalf": secondHalf,
+        "firstHalf": halfDay,
+        "secondHalf": 'No',
         "NoOfLeave": NoOfLeave,
-        "status": 'Approved'
+        "status": 'Approved',
+        "remark": 'From Admin',
       };
-
 
       const response = await axios.post(`${Config.apiUrl}/addleave`, params);
       console.log(response.data);
@@ -329,8 +335,11 @@ const LeavePage = () => {
       fetchLeaveRequests();
       setEmpID('');
       setEmpName('');
-      setStartDate('');
-      setEndDate('');
+      setRangeStartDate('');
+      setRangeEndDate('');
+      setRelaxationTime('');
+      setLateRecord('');
+      setLateEnd('');
       toast.success("Late leave added successfully.", { autoClose: 3000 });
     } catch (error) {
       toast.error("Error in late leave submission." + error, { autoClose: 3000 });
@@ -340,42 +349,125 @@ const LeavePage = () => {
   const handleLateCancel = () => {
     setEmpID('');
     setEmpName('Employee Name');
-    setStartDate('');
-    setEndDate('');
+    setRangeStartDate('');
+    setRangeEndDate('');
+    setLateEnd('');
+    setRelaxationTime('');
+    setLateRecord('');
     setShowLateDialog(false);
   };
 
-  const handleAddCancel = () => {
-    setShowAddDialog(false);
-  };
+  //#endregion
 
-  const openLateModal = () => {
-    setShowLateDialog(true);
-  };
+   //#region Approve Leave
 
-  const openModal = () => {
-    setShowAddDialog(true);
-  };
+  const handleApproveReasonChange = ((event) => {
+    setApproveReason(event.target.value);
+  });
 
-  const calculateDays = (start, end, count) => {
-    if (start && end) {
-      const startDt = new Date(start);
-      const endDt = new Date(end);
-      const diffTime = Math.abs(endDt - startDt);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays + count;
+  const handleApprove = async () => {
+
+    try {
+      let params = {
+        "EmpID": user?.empid,
+        "Id": selectedRequest.id,
+        "Reason": approveReason,
+      }
+      const response = await axios.put(`${Config.apiUrl}/approve`, params);
+      console.log(response.data);
+      setShowApproveDialog(false);
+      fetchLeaveRequests();
+      toast.success("Leave approved successfully.", { autoClose: 3000 });
+    } catch {
+      toast.error("Error in approving leave.", { autoClose: 3000 });
     }
-  };
+  }
 
-  const currentTableData = useMemo(() => {
-    const firstPageIndex = (currentPage - 1) * PageSize;
-    const lastPageIndex = firstPageIndex + PageSize;
-    return leaveRequests.slice(firstPageIndex, lastPageIndex);
-  }, [leaveRequests, currentPage]);
+  const handleApproveCancel = (() => {
+    setShowApproveDialog(false);
+    setApproveReason('Approved');
+  });
+
+  //#endregion
+
+  //#region Reject Leave
+  const handleRejectReasonChange = ((event) => {
+    setRejectReason(event.target.value);
+  });
+
+  const handleReject = async () => {
+    if (!rejectReason) {
+      toast.info("Please enter reason for rejection.", { autoClose: 3000 });
+      return;
+    }
+    try {
+      let params = {
+        "rejectedCancel": 'Rejected',
+        "Id": selectedRequest.id,
+        "rejectReason": rejectReason
+      }
+      const response = await axios.put(`${Config.apiUrl}/reject`, params);
+      console.log(response.data);
+      setShowRejectDialog(false);
+      fetchLeaveRequests();
+      setRejectReason('');
+      toast.success("Leave rejected successfully.", { autoClose: 3000 });
+    } catch {
+      toast.error("Error in rejecting leave.", { autoClose: 3000 });
+
+    }
+  }
+
+  const handleRejectCancel = () => {
+    setShowRejectDialog(false);
+    setRejectReason('');
+  }
+
+  //#endregion
+
+  //#region Delete Leave
+
+  const handleCancelReasonChange = ((event) => {
+    setRejectReason(event.target.value);
+  });
+
+  const handleCancel = async () => {
+    if (!rejectReason) {
+      toast.info("Please enter reason for deleting leave request.", { autoClose: 3000 });
+      return;
+    }
+    try {
+      let params = {
+        "rejectedCancel": 'Pullback',
+        "Id": selectedRequest.id,
+        "rejectReason": rejectReason
+      }
+      const response = await axios.put(`${Config.apiUrl}/reject`, params);
+      console.log(response.data);
+      handleModalCancel(false);
+      fetchLeaveRequests();
+      setRejectReason('');
+      toast.success("Leave request deleted successfully.", { autoClose: 3000 });
+    } catch {
+      toast.error("Error in deleting leave request.", { autoClose: 3000 });
+
+    }
+
+  }
+
+  const handleModalCancel = () => {
+    setShowPullback(false);
+    setRejectReason('');
+  }
+
+  //#endregion
 
 
   return (
     <>
+      {user?.userType == 1 && (
+        <BarChart />
+      )}
       <CRow>
         <CCol xs={12}>
           <CCard className="mb-4">
@@ -428,14 +520,6 @@ const LeavePage = () => {
                       </CCol>
                       <CCol xs>
                         <CFormLabel id="inputGroupPrepend03">Employee Name</CFormLabel>
-                        {/* <CFormInput
-                          type="text"
-                          placeholder="Employee Name"
-                          id="EmpID"
-                          name='EmpID'
-                          onChange={handleNameChange}
-                        /> */}
-
                         <div>
                           <CDropdown>
                             <CDropdownToggle
@@ -456,23 +540,23 @@ const LeavePage = () => {
                     </CRow>
                     <CRow className="g-3">
                       <CCol xs style={{ marginBottom: '5px' }}>
-                        <CFormLabel id="inputGroupPrepend03">Leave Start Date</CFormLabel>
+                        <CFormLabel id="inputGroupPrepend03">Range Start Date</CFormLabel>
                         <CFormInput
                           type="date"
                           id="StartDate"
                           name='StartDate'
-                          onChange={handlStartDateChange}
-                          placeholder="Leave Start Date"
+                          onChange={handleRangeStartDate}
+                          placeholder="Range Start Date"
 
                         />
                       </CCol>
                       <CCol xs>
-                        <CFormLabel id="inputGroupPrepend03">Leave End Date</CFormLabel>
+                        <CFormLabel id="inputGroupPrepend03">Range End Date</CFormLabel>
                         <CFormInput
                           type="date"
-                          placeholder="Leave End Date"
-                          onChange={handleEndDateChange}
-                          min={startDate}
+                          placeholder="Range End Date"
+                          onChange={handleRangeEndDate}
+                          min={rangeStartDate}
                           id="EndDate"
                           name='EndDate'
 
@@ -480,26 +564,68 @@ const LeavePage = () => {
                       </CCol>
                     </CRow>
                     <CRow className="g-3">
+                      <CCol xs style={{ marginBottom: '5px' }}>
+                        <CFormLabel id="inputGroupPrepend03">Relaxation Time (in min)</CFormLabel>
+                        <CFormInput
+                          type="input"
+                          id="RelaxationTime"
+                          name='RelaxationTime'
+                          onChange={handleRelaxationTimeChange}
+                          placeholder="Relaxation Time"
 
+                        />
+                      </CCol>
+                      <CCol xs>
+                        <CFormLabel id="inputGroupPrepend03">Late Record Count</CFormLabel>
+                        <CFormInput
+                          type="input"
+                          id="LateRecordCount"
+                          name='LateRecordCount'
+                          placeholder="Late Record Count"
+                          value={lateRecord}
+                          disabled
+                        />
+                      </CCol>
+                    </CRow>
+                    <CRow className="g-3">
+                      <CCol xs style={{ marginBottom: '5px' }}>
+                        <CFormLabel id="inputGroupPrepend03">Late Leave Start Date</CFormLabel>
+                        <CFormInput
+                          type="date"
+                          id="StartDate"
+                          name='StartDate'
+                          // onChange={handleLateStartDate}
+                          value={rangeStartDate}
+                          disabled
+                          placeholder="Late Leave Start Date"
+
+                        />
+                      </CCol>
+                      <CCol xs>
+                        <CFormLabel id="inputGroupPrepend03">Late Leave End Date</CFormLabel>
+                        <CFormInput
+                          type="date"
+                          placeholder="Late Leave End Date"
+                          onChange={handleLateEndDate}
+                          min={rangeStartDate}
+                          id="EndDate"
+                          name='EndDate'
+
+                        />
+                      </CCol>
+                    </CRow>
+                    <CRow className="g-3">
                       <CCol xs>
                         <CFormCheck
                           inline
-                          id="inlineCheckbox2"
+                          id="inlineCheckbox3"
                           value="Yes"
-                          label="Second Half"
-                          checked={secondHalfChecked}
-                          onChange={handleSecondHalfChange}
+                          label="Half Day"
+                          checked={halfDayChecked}
+                          onChange={handleHalfDayChange}
                         />
                       </CCol>
                       <CCol xs style={{ marginBottom: '5px' }}>
-                        <CFormCheck
-                          inline
-                          id="inlineCheckbox1"
-                          value="Yes"
-                          label="First Half"
-                          checked={firstHalfChecked}
-                          onChange={handleFirstHalfChange}
-                        />
                       </CCol>
                     </CRow>
                     <div className="mb-3">
@@ -560,7 +686,7 @@ const LeavePage = () => {
                           type="date"
                           id="StartDate"
                           name='StartDate'
-                          onChange={handlStartDateChange}
+                          onChange={handleStartDateChange}
                           placeholder="Leave Start Date"
 
                         />
@@ -579,7 +705,6 @@ const LeavePage = () => {
                       </CCol>
                     </CRow>
                     <CRow className="g-3">
-
                       <CCol xs>
                         <CFormCheck
                           inline
@@ -656,9 +781,6 @@ const LeavePage = () => {
                         <CTableHeaderCell scope="col" className="bg-body-tertiary text-center">
                           Status
                         </CTableHeaderCell>
-                        <CTableHeaderCell scope="col" className="bg-body-tertiary text-center">
-                          Remarks
-                        </CTableHeaderCell>
                         {user?.userType == 1 && (
                           <>
                             <CTableHeaderCell scope="col" className="bg-body-tertiary text-center">
@@ -666,6 +788,9 @@ const LeavePage = () => {
                             </CTableHeaderCell>
                           </>
                         )}
+                        <CTableHeaderCell scope="col" className="bg-body-tertiary text-center">
+                          Remarks
+                        </CTableHeaderCell>
                         {user?.userType == 2 && (
                           <>
                             {checkStatusPending == 'Pending' && (
@@ -755,6 +880,135 @@ const LeavePage = () => {
                                 </div></CTableDataCell>
                             </>
                           )}
+
+                          {request.Status == 'Pending' && (
+                            <>
+                              {user?.userType == 1 && (
+                                <>
+                                  <CTableDataCell >
+
+                                    <CRow style={{ position: 'relative', display: 'flex' }}>
+                                      <CCol>
+                                        <div className="leave-status">
+                                          <CTooltip
+                                            content="Approve leave"
+                                            trigger={['hover']}
+                                          >
+                                            <CButton
+                                              color="primary"
+                                              className="approve-btn"
+                                              onClick={() => {
+                                                setSelectedRequest(request);
+                                                setShowApproveDialog(!showApproveDialog);
+                                              }}>
+                                              APPROVE
+                                            </CButton>
+                                          </CTooltip>
+                                        </div>
+                                      </CCol>
+                                      <CCol>
+                                        <div className="leave-status">
+                                          <CTooltip
+                                            content="Reject leave"
+                                            trigger={['hover']}
+                                          >
+                                            <CButton
+                                              color="primary"
+                                              type="button"
+                                              className="reject-btn"
+                                              onClick={() => {
+                                                setSelectedRequest(request);
+                                                setShowRejectDialog(!showRejectDialog);
+                                              }}>
+                                              REJECT
+                                            </CButton>
+                                          </CTooltip>
+                                        </div>
+                                      </CCol>
+                                    </CRow>
+
+                                    <CModal visible={showApproveDialog} onClose={() => handleApproveCancel}>
+                                      <CModalHeader>
+                                        <CModalTitle>Approve</CModalTitle>
+                                      </CModalHeader>
+                                      <CModalBody>
+                                        <div className="mb-3">
+                                          <CFormLabel htmlFor="exampleFormControlTextarea1">
+                                            Do you want to approve the leave?                                              </CFormLabel>
+                                          <CFormTextarea
+                                            id="exampleFormControlTextarea1"
+                                            rows={3}
+                                            placeholder="Reason for Approval"
+                                            name="reason"
+                                            defaultValue="Approved"
+                                            onChange={handleApproveReasonChange}
+
+                                          ></CFormTextarea>
+                                        </div>
+                                      </CModalBody>
+                                      <CModalFooter>
+                                        <CButton color="secondary" onClick={() => setShowApproveDialog(false)}>
+                                          No
+                                        </CButton>
+                                        <CButton color="primary" onClick={handleApprove}>Yes</CButton>
+                                      </CModalFooter>
+                                    </CModal>
+
+                                    <CModal visible={showRejectDialog} onClose={() => handleRejectCancel}>
+                                      <CModalHeader>
+                                        <CModalTitle>Reject</CModalTitle>
+                                      </CModalHeader>
+                                      <CModalBody>
+                                        <CForm>
+                                          <div className="mb-3">
+                                            <CFormLabel htmlFor="exampleFormControlTextarea1">
+                                              Do you want to reject the leave?                                              </CFormLabel>
+                                            <CFormTextarea
+                                              id="exampleFormControlTextarea1"
+                                              rows={3}
+                                              placeholder="Reason for Rejection"
+                                              name="reason"
+                                              onChange={handleRejectReasonChange}
+
+                                            ></CFormTextarea>
+                                          </div>
+                                        </CForm>
+                                      </CModalBody>
+                                      <CModalFooter>
+                                        <CButton color="secondary" onClick={() => setShowRejectDialog(false)}>
+                                          No
+                                        </CButton>
+                                        <CButton color="primary" onClick={handleReject}>Yes</CButton>
+                                      </CModalFooter>
+                                    </CModal>
+
+                                  </CTableDataCell>
+                                </>
+                              )}
+                            </>
+                          )}
+                          {request.Status == 'Approved' && (
+                            <>
+                              {user?.userType == 1 && (
+                                <CTableDataCell></CTableDataCell>
+                              )}
+                            </>
+                          )}
+                          {request.Status == 'Rejected' && (
+                            <>
+                              {user?.userType == 1 && (
+                                <CTableDataCell></CTableDataCell>
+                              )}
+                            </>
+                          )}
+                          {request.Status == 'Pullback' && (
+                            <>
+                              {user?.userType == 1 && (
+                                <CTableDataCell></CTableDataCell>
+                              )}
+                            </>
+                          )}
+
                           <CTableDataCell>{request.RejectReason}</CTableDataCell>
 
                           {user?.userType == 2 && (
@@ -832,126 +1086,7 @@ const LeavePage = () => {
                               )}
                             </>
                           )}
-
-                          {request.Status == 'Pending' && (
-                            <>
-                              {user?.userType == 1 && (
-                                <>
-                                  <CTableDataCell >
-
-                                    <CRow style={{ position: 'relative', display: 'flex' }}>
-                                      <CCol>
-                                        <div className="leave-status">
-                                          <CTooltip
-                                            content="Approve leave"
-                                            trigger={['hover']}
-                                          >
-                                            <CButton
-                                              color="primary"
-                                              className="approve-btn"
-                                              onClick={() => {
-                                                setSelectedRequest(request);
-                                                setShowApproveDialog(!showApproveDialog);
-                                              }}>
-                                              APPROVE
-                                            </CButton>
-                                          </CTooltip>
-                                        </div>
-                                      </CCol>
-                                      <CCol>
-                                        <div className="leave-status">
-                                          <CTooltip
-                                            content="Reject leave"
-                                            trigger={['hover']}
-                                          >
-                                            <CButton
-                                              color="primary"
-                                              type="button"
-                                              className="reject-btn"
-                                              onClick={() => {
-                                                setSelectedRequest(request);
-                                                setShowRejectDialog(!showRejectDialog);
-                                              }}>
-                                              REJECT
-                                            </CButton>
-                                          </CTooltip>
-                                        </div>
-                                      </CCol>
-                                    </CRow>
-
-                                    <CModal visible={showApproveDialog} onClose={() => setShowApproveDialog(false)}>
-                                      <CModalHeader>
-                                        <CModalTitle>Approve</CModalTitle>
-                                      </CModalHeader>
-                                      <CModalBody>
-                                        <div className="confirmation-text">
-                                          Do you want to approve the leave?
-                                        </div>
-                                      </CModalBody>
-                                      <CModalFooter>
-                                        <CButton color="secondary" onClick={() => setShowApproveDialog(false)}>
-                                          No
-                                        </CButton>
-                                        <CButton color="primary" onClick={handleApprove}>Yes</CButton>
-                                      </CModalFooter>
-                                    </CModal>
-
-                                    <CModal visible={showRejectDialog} onClose={() => handleRejectCancel}>
-                                      <CModalHeader>
-                                        <CModalTitle>Reject</CModalTitle>
-                                      </CModalHeader>
-                                      <CModalBody>
-                                        <CForm>
-                                          <div className="mb-3">
-                                            <CFormLabel htmlFor="exampleFormControlTextarea1">
-                                              Do you want to reject the leave?                                              </CFormLabel>
-                                            <CFormTextarea
-                                              id="exampleFormControlTextarea1"
-                                              rows={3}
-                                              placeholder="Reason for Rejection"
-                                              name="reason"
-                                              onChange={handleRejectReasonChange}
-
-                                            ></CFormTextarea>
-                                          </div>
-                                        </CForm>
-                                      </CModalBody>
-                                      <CModalFooter>
-                                        <CButton color="secondary" onClick={() => setShowRejectDialog(false)}>
-                                          No
-                                        </CButton>
-                                        <CButton color="primary" onClick={handleReject}>Yes</CButton>
-                                      </CModalFooter>
-                                    </CModal>
-
-                                  </CTableDataCell>
-                                </>
-                              )}
-                            </>
-                          )}
-                          {request.Status == 'Approved' && (
-                            <>
-                              {user?.userType == 1 && (
-                                <CTableDataCell></CTableDataCell>
-                              )}
-                            </>
-                          )}
-                          {request.Status == 'Rejected' && (
-                            <>
-                              {user?.userType == 1 && (
-                                <CTableDataCell></CTableDataCell>
-                              )}
-                            </>
-                          )}
-                          {request.Status == 'Pullback' && (
-                            <>
-                              {user?.userType == 1 && (
-                                <CTableDataCell></CTableDataCell>
-                              )}
-                            </>
-                          )}
                         </CTableRow>
-
                       ))}
                     </CTableBody>
                   </CTable>

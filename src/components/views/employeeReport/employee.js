@@ -27,6 +27,9 @@ import UserContext from '../../../context/UserContext'
 const EmployeeAttendance = () => {
   const user = useSelector((state) => state.user);
   const [selectedMonthYear, setSelectedMonthYear] = useState('');
+  const [empIdName, setEmpIdName] = useState('All Employees');
+  const [employeeOptions, setEmployeeOptions] = useState([]);
+  const [employeeID, setEmployeeID] = useState('');
   const [reportMonth, setReportMonth] = useState('');
   const [reportYear, setReportYear] = useState('');
   const [dateHeaders, setDateHeaders] = useState([]);
@@ -54,6 +57,26 @@ const EmployeeAttendance = () => {
     }
   }, [selectedMonthYear, reportYear, valueFirstLoad]);
 
+  useEffect(() => {
+    const setEmpIdName = async () => {
+      try {
+        const response = await axios.get(`${Config.apiUrl}/empidname`);
+        const options = response.data.data.map((employee, index) => (
+          <CDropdownItem key={index} value={`${employee.empid}-${employee.name}`}>{employee.empid}-{employee.name}</CDropdownItem> 
+        ));
+        setEmployeeOptions(options);
+        (response.data.data).forEach(record => {
+          if (record.name === name) {
+            setEmpIdName(`${record.empid}-${record.name}`);
+          }
+        });
+      } catch (error) {
+        console.error('Error fetching employees name-id', error);
+      }
+    };
+    setEmpIdName();
+  }, [name]);
+
   const handleMonthChange = (event) => {
     setSelectedMonthYear(event.target.text);
     const selectedMonth = event.target.text.split(',');
@@ -63,23 +86,48 @@ const EmployeeAttendance = () => {
     setReportMonth(new Date(`${strMonth} 1, ${reportYear}`).getMonth() + 1);
   };
 
+  const handleEmployeeChange = (event) => {
+    setEmpIdName(event.target.text);
+    const employee = event.target.text.split('-');
+    setEmployeeID(employee[0].trim());
+  };
+  
   const handleFullReport = async () => {
     try {
-      setDateHeaders([]);
-      setEmployeeData([]);
-      const response = await axios.get(`${Config.apiUrl}/admin?month=${reportMonth}&year=${reportYear}`);
-      keys = Object.keys(response.data.data[0]);
-      keys.forEach((item, index) => {
-        setDateHeaders(prevDateHeaders => [...prevDateHeaders, item]);
-      });
-
-      for (const key in (response.data.data)) {
-        const eachEmployee = response.data.data[key];
-        const employeeObject = {};
-        for (const valueKey in eachEmployee) {
-          employeeObject[valueKey] = eachEmployee[valueKey];
+      if(empIdName == 'All Employees'){
+        setDateHeaders([]);
+        setEmployeeData([]);
+        const response = await axios.get(`${Config.apiUrl}/admin?month=${reportMonth}&year=${reportYear}`);
+        keys = Object.keys(response.data.data[0]);
+        keys.forEach((item, index) => {
+          setDateHeaders(prevDateHeaders => [...prevDateHeaders, item]);
+        });
+  
+        for (const key in (response.data.data)) {
+          const eachEmployee = response.data.data[key];
+          const employeeObject = {};
+          for (const valueKey in eachEmployee) {
+            employeeObject[valueKey] = eachEmployee[valueKey];
+          }
+          setEmployeeData(prevEmployeeData => [...prevEmployeeData, employeeObject]);
         }
-        setEmployeeData(prevEmployeeData => [...prevEmployeeData, employeeObject]);
+      } else {
+        setDateHeaders([]);
+        setEmployeeData([]);
+        const response = await axios.get(`${Config.apiUrl}/singleEmp?month=${reportMonth}&year=${reportYear}&empid=${employeeID}`);
+        keys = Object.keys(response.data.data[0]);
+        keys.forEach((item, index) => {
+          setDateHeaders(prevDateHeaders => [...prevDateHeaders, item]);
+        });
+  
+        for (const key in (response.data.data)) {
+          const eachEmployee = response.data.data[key];
+          const employeeObject = {};
+          for (const valueKey in eachEmployee) {
+            employeeObject[valueKey] = eachEmployee[valueKey];
+          }
+          setEmployeeData(prevEmployeeData => [...prevEmployeeData, employeeObject]);
+        }
       }
     }
     catch (error) {
@@ -254,7 +302,7 @@ const EmployeeAttendance = () => {
           </CCardHeader>
           <CCardBody>
             <CRow className='mb-4'>
-              <CCol xs={6} sm={6} xl={3} style={{ marginTop: '5px' }}>
+              <CCol xs={12} sm={12} xl={3} style={{ marginTop: '5px' }}>
                 <CTooltip
                   content="Select month"
                   trigger={['hover']}
@@ -272,7 +320,25 @@ const EmployeeAttendance = () => {
                   </CDropdown>
                 </CTooltip>
               </CCol>
-              <CCol xs={6} sm={6} xl={9} style={{ marginTop: '5px' }}>
+              <CCol xs={12} sm={12} xl={3} style={{ marginTop: '5px' }}>
+                <CTooltip
+                  content="Select employee"
+                  trigger={['hover']}
+                >
+                  <CDropdown>
+                    <CDropdownToggle
+                      color="secondary" caret >
+                      {empIdName}
+                    </CDropdownToggle>
+                    <CDropdownMenu
+                      onClick={handleEmployeeChange} style={{ cursor: 'pointer', overflowY: 'scroll', maxHeight: '200px' }}>
+                      <CDropdownItem value="">All Employees</CDropdownItem>
+                      {employeeOptions}
+                    </CDropdownMenu>
+                  </CDropdown>
+                </CTooltip>
+              </CCol>
+              <CCol xs={12} sm={12} xl={6} style={{ marginTop: '5px' }}>
                 <CTooltip
                   content="Show report"
                   trigger={['hover']}

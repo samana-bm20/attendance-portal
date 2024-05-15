@@ -80,7 +80,7 @@ const AppHeader = () => {
         <CHeaderNav className="d-none d-md-flex">
           <CNavItem>
             <CNavLink to="/dashboard" as={NavLink} style={{ fontWeight: 'bold' }}>
-              <h4>ML INFOMAP : Human Resource Management System</h4>
+              <h4>Human Resource Management System</h4>
             </CNavLink>
           </CNavItem>
         </CHeaderNav>
