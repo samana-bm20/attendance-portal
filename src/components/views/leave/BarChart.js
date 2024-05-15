@@ -15,7 +15,7 @@ import {
 const BarChart = () => {
     const user = useSelector((state) => state.user);
     const [empNames, setEmpNames] = useState([]);
-    const [leavesLeft, setLeavesLeft] = useState([]);
+    const [leavesUsed, setLeavesUsed] = useState([]);
     const [empLeaves, setEmpLeaves] = useState([]);
 
     useEffect(() => {
@@ -24,14 +24,14 @@ const BarChart = () => {
             setEmpLeaves(response.data.data);
         };
         fetchEmployeeLeaves();
-    }, []);
+    }, [empLeaves]);
 
     useEffect(() => {
         const extractedEmpNames = empLeaves.map(obj => obj.EmpName);
-        const extractedLeavesLeft = empLeaves.map(obj => obj.LeavesLeft);
+        const extractedLeavesUsed = empLeaves.map(obj => obj.LeavesUsed);
 
         setEmpNames(extractedEmpNames);
-        setLeavesLeft(extractedLeavesLeft);
+        setLeavesUsed(extractedLeavesUsed);
     }, [empLeaves]);
 
     const chartData = {
@@ -44,7 +44,7 @@ const BarChart = () => {
                     backgroundColor: ['rgba(90, 209, 255, 1)'],
                     borderColor: 'rgba(6, 27, 94, 1)', 
                     borderWidth: 1,
-                    data: leavesLeft,
+                    data: leavesUsed,
                 },
             ],
         },
