@@ -23,7 +23,7 @@ import {
   CTooltip,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilClock, cilCheckCircle, cilXCircle, cilUser, cilBan } from '@coreui/icons'
+import { cilClock, cilCheckCircle, cilXCircle, cilUser, cilBirthdayCake, cilBan } from '@coreui/icons'
 import { toast } from "react-toastify";
 
 import Config from '../../../Config'
@@ -35,6 +35,7 @@ const Dashboard = () => {
   const [loginTime, setLoginTime] = useState([])
   const [futureLeaves, setFutureLeaves] = useState([])
   const [todayLeaves, setTodayLeaves] = useState([])
+  const [birthdays, setBirthdays] = useState([])
   const [inDisabled, setInDisabled] = useState(false)
   const [outDisabled, setOutDisabled] = useState(false)
   const [showOutTime, setShowOutTime] = useState(false);
@@ -134,12 +135,25 @@ const Dashboard = () => {
         const response = await axios.get(`${Config.apiUrl}/todayleave`)
         setTodayLeaves(response.data.data)
       } catch (error) {
-        console.error('Error fetching login time', error)
+        console.error('Error fetching absentees', error)
       }
     }
 
     onLeaveToday();
-  }, [])
+  }, []);
+
+  useEffect(() => {
+    const upcomingBirthdays = async () => {
+      try {
+        const response = await axios.get(`${Config.apiUrl}/bday`)
+        setBirthdays(response.data.data)
+      } catch (error) {
+        console.error('Error fetching upcoming birthdays', error)
+      }
+    }
+
+    upcomingBirthdays();
+  }, []);
 
   return (
     <>
@@ -207,7 +221,7 @@ const Dashboard = () => {
       </CRow>
       <MainChart />
       <CRow xs={{ gutter: 3 }}>
-        <CCol sm={12} xl={9} xxl={9}>
+        <CCol sm={12} xl={6} xxl={6}>
           <CCard className="mb-4">
             <CCardHeader>Leave Requests</CCardHeader>
             <CCardBody>
@@ -317,7 +331,7 @@ const Dashboard = () => {
         <CCol sm={12} xl={3} xxl={3}>
           <CCard className="mb-2">
             <CCardHeader>Who's on Leave Today</CCardHeader>
-            <CCardBody>
+            <CCardBody style={{ overflowY: 'scroll', maxHeight: '200px' }}>
               <CRow className="mb-4">
                 <CCol>On Leave: {todayLeaves.length}</CCol>
               </CRow>
@@ -338,6 +352,30 @@ const Dashboard = () => {
                     </CCol>
                   </CRow>
                 ))}
+            </CCardBody>
+          </CCard>
+        </CCol>
+        <CCol sm={12} xl={3} xxl={3}>
+          <CCard className="mb-2">
+            <CCardHeader>Upcoming Birthdays</CCardHeader>
+            <CCardBody style={{ overflowY: 'scroll', maxHeight: '200px' }}>
+              {birthdays ?
+                (birthdays.map((record, index) => (
+                  <CRow key={index}>
+                    <CCol
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                      }}
+                    >
+                      <CIcon icon={cilBirthdayCake} style={{ color: 'blue' }} />
+                      <div className="p-2">
+                        {record.name} - {record.UpcomingBirthday}
+                      </div>
+                    </CCol>
+                  </CRow>
+                ))) : 'No upcoming birthday'}
             </CCardBody>
           </CCard>
         </CCol>

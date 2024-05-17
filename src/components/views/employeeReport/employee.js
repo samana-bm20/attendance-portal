@@ -62,7 +62,7 @@ const EmployeeAttendance = () => {
       try {
         const response = await axios.get(`${Config.apiUrl}/empidname`);
         const options = response.data.data.map((employee, index) => (
-          <CDropdownItem key={index} value={`${employee.empid}-${employee.name}`}>{employee.empid}-{employee.name}</CDropdownItem> 
+          <CDropdownItem key={index} value={`${employee.empid}-${employee.name}`}>{employee.empid}-{employee.name}</CDropdownItem>
         ));
         setEmployeeOptions(options);
         (response.data.data).forEach(record => {
@@ -91,10 +91,10 @@ const EmployeeAttendance = () => {
     const employee = event.target.text.split('-');
     setEmployeeID(employee[0].trim());
   };
-  
+
   const handleFullReport = async () => {
     try {
-      if(empIdName == 'All Employees'){
+      if (empIdName == 'All Employees') {
         setDateHeaders([]);
         setEmployeeData([]);
         const response = await axios.get(`${Config.apiUrl}/admin?month=${reportMonth}&year=${reportYear}`);
@@ -102,7 +102,7 @@ const EmployeeAttendance = () => {
         keys.forEach((item, index) => {
           setDateHeaders(prevDateHeaders => [...prevDateHeaders, item]);
         });
-  
+
         for (const key in (response.data.data)) {
           const eachEmployee = response.data.data[key];
           const employeeObject = {};
@@ -119,7 +119,7 @@ const EmployeeAttendance = () => {
         keys.forEach((item, index) => {
           setDateHeaders(prevDateHeaders => [...prevDateHeaders, item]);
         });
-  
+
         for (const key in (response.data.data)) {
           const eachEmployee = response.data.data[key];
           const employeeObject = {};
@@ -300,9 +300,9 @@ const EmployeeAttendance = () => {
           <CCardHeader>
             Employee Report
           </CCardHeader>
-          <CCardBody>
+          <CCardBody  style={{ overflowY: 'scroll', maxHeight: '500px' }}>
             <CRow className='mb-4'>
-              <CCol xs={12} sm={12} xl={3} style={{ marginTop: '5px' }}>
+              <CCol xs={12} sm={12} md={3} xl={3} style={{ marginTop: '5px' }}>
                 <CTooltip
                   content="Select month"
                   trigger={['hover']}
@@ -320,7 +320,7 @@ const EmployeeAttendance = () => {
                   </CDropdown>
                 </CTooltip>
               </CCol>
-              <CCol xs={12} sm={12} xl={3} style={{ marginTop: '5px' }}>
+              <CCol xs={12} sm={12} md={3} xl={3} style={{ marginTop: '5px' }}>
                 <CTooltip
                   content="Select employee"
                   trigger={['hover']}
@@ -338,7 +338,7 @@ const EmployeeAttendance = () => {
                   </CDropdown>
                 </CTooltip>
               </CCol>
-              <CCol xs={12} sm={12} xl={6} style={{ marginTop: '5px' }}>
+              <CCol xs={12} sm={12} md={6} xl={6} style={{ marginTop: '5px' }}>
                 <CTooltip
                   content="Show report"
                   trigger={['hover']}
@@ -347,8 +347,16 @@ const EmployeeAttendance = () => {
                 </CTooltip>
               </CCol>
             </CRow>
-            <CRow className='mb-4' style={{ overflowX: 'auto', textAlign: 'center' }}>
-              <CTable align="middle" id='employeeAttendance' className="mb-4 border"
+            <CRow
+              className='mb-4'
+              style={{
+                overflowX: 'auto',
+                textAlign: 'center'
+              }}>
+              <CTable
+                align="middle"
+                id='employeeAttendance'
+                className="mb-4 border"
                 hover responsive>
                 <CTableHead style={{ overflowX: 'auto', textAlign: 'center' }}>
                   <CTableRow className="bg-body-tertiary text-center">
@@ -359,7 +367,7 @@ const EmployeeAttendance = () => {
                     }
                   </CTableRow>
                 </CTableHead>
-                <CTableBody style={{ overflowX: 'auto', textAlign: 'center' }}>
+                  <CTableBody>
                   {
                     employeeData && employeeData.map((employee, rowIndex) => {
                       return (
@@ -383,7 +391,7 @@ const EmployeeAttendance = () => {
                   trigger={['hover']}
                 >
                   <CButton align="middle" color="success" onClick={downloadTableAsXLSX}>Export</CButton>
-                  </CTooltip>
+                </CTooltip>
               </CCol>
             </CRow>
           </CCardBody>

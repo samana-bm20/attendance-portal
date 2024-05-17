@@ -104,9 +104,9 @@ const Monthly = () => {
         try {
             const response = await axios.get(`${Config.apiUrl}/month?username=${user?.username}&month=${reportMonth}&year=${reportYear}`);
             console.log(response.data.data);
+            const holiday = await axios.get(`${Config.apiUrl}/holiday`);
             const updatedAttendanceData = await Promise.all(response.data.data.map(async (record) => {
                 if (record.time === null) {
-                    const holiday = await axios.get(`${Config.apiUrl}/holiday`);
                     const holidayDate = holiday.data.data.find((holiday) => holiday.Date === record.date);
                     if (holidayDate) {
                         return { ...record, time: <b>{holidayDate.HolidayName}</b> };
@@ -132,9 +132,9 @@ const Monthly = () => {
 
             try {
                 const response = await axios.get(`${Config.apiUrl}/month?username=${user?.username}&month=${currentMonth}&year=${currentYear}`);
+                const holiday = await axios.get(`${Config.apiUrl}/holiday`);
                 const updatedAttendanceData = await Promise.all(response.data.data.map(async (record) => {
                     if (record.time === null) {
-                        const holiday = await axios.get(`${Config.apiUrl}/holiday`);
                         const holidayDate = holiday.data.data.find((holiday) => holiday.Date === record.date);
                         if (holidayDate) {
                             return { ...record, time: holidayDate.HolidayName };

@@ -15,6 +15,11 @@ const Attendance = () => {
   const [workingDays, setWorkingDays] = useState(0);
   const [presentDays, setPresentDays] = useState(0);
   const [absentDays, setAbsentDays] = useState(0);
+  const [viewDate, setViewDate] = useState(new Date());
+
+  const handleActiveStartDateChange = ({ activeStartDate }) => {
+    setViewDate(activeStartDate);
+  };
 
   useEffect(() => {
     const fetchDayCount = async () => {
@@ -30,12 +35,38 @@ const Attendance = () => {
     fetchDayCount();
   }, [user?.empid]);
 
+  function formatDate(date) {
+    var d = new Date(date),
+      month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
+
+    if (month.length < 2)
+      month = '0' + month;
+    if (day.length < 2)
+      day = '0' + day;
+
+    return [year, month, day].join('-');
+  }
+
   useEffect(() => {
     const handleCalendarReport = async () => {
       try {
-        const response = await axios.get(`${Config.apiUrl}/calendar?username=${user?.username}`);
+        const today = new Date();
+        const firstDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        let startDate, endDate;
+        if ((formatDate(viewDate) == formatDate(today))) {
+          startDate = formatDate(firstDate);
+          endDate = formatDate(lastDate);
+        } else {
+          startDate = formatDate(viewDate);
+          endDate = formatDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0));
+        }
+
+        const response = await axios.get(`${Config.apiUrl}/calendar?username=${user?.username}&startDate=${startDate}&endDate=${endDate}`);
         const updatedCalendarData = await Promise.all(response.data.data.map(async (record) => {
-          if (record.time === null) {
+          if ((record.time === null) && (new Date(record.date) <= new Date())) {
             const allAbsent = await checkAllAbsent(record.date);
             return { ...record, time: allAbsent ? 'OFF' : 'Absent' };
           }
@@ -47,7 +78,7 @@ const Attendance = () => {
       }
     };
     handleCalendarReport();
-  }, [user?.username]);
+  }, [viewDate]);
 
   const checkAllAbsent = async (date) => {
     try {
@@ -62,14 +93,26 @@ const Attendance = () => {
   useEffect(() => {
     const fetchHolidayRecord = async () => {
       try {
-        const response = await axios.get(`${Config.apiUrl}/holiday`);
+        const today = new Date();
+        const firstDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        let startDate, endDate;
+        if ((formatDate(viewDate) == formatDate(today))) {
+          startDate = formatDate(firstDate);
+          endDate = formatDate(lastDate);
+        } else {
+          startDate = formatDate(viewDate);
+          endDate = formatDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0));
+        }
+
+        const response = await axios.get(`${Config.apiUrl}/monthHoliday?startDate=${startDate}&endDate=${endDate}`);
         setHolidays(response.data.data);
       } catch {
         console.error("error fetching public holidays.");
       }
     };
     fetchHolidayRecord();
-  }, []);
+  }, [viewDate]);
 
   useEffect(() => {
     const fetchLeaveRecord = async () => {
@@ -138,6 +181,8 @@ const Attendance = () => {
         return 'off';
       } else if (time === 'Absent') {
         return 'absent';
+      } else if (time == null) {
+        return '';
       } else {
         if ((parseInt(time.split(':')[0]) === 9 && parseInt(time.split(':')[1]) >= 0) ||
           parseInt(time.split(':')[0]) > 9 || time.includes('PM')) {
@@ -163,7 +208,7 @@ const Attendance = () => {
   return (
     <>
       <CCard className="mb-4">
-        <CCardHeader />
+        <CCardHeader>Current Month</CCardHeader>
         <CCardBody>
           <CRow>
             <CCol style={{ textAlign: 'center' }}>
@@ -194,7 +239,10 @@ const Attendance = () => {
             <CCardBody>
               <CRow >
                 <CCol xs={12} sm={8} xl={8} xxl={8} style={{ marginBottom: '5px', display: 'flex', justifyContent: 'center' }}>
-                  <Calendar tileClassName={coloredDays} />
+                  <Calendar
+                    tileClassName={coloredDays}
+                    onActiveStartDateChange={handleActiveStartDateChange}
+                  />
                 </CCol>
                 <CCol xs={12} sm={4} xl={4} xxl={4} style={{ display: 'flex', justifyContent: 'center' }}>
                   <CCard className='p-2' style={{ justifyContent: 'center' }}>

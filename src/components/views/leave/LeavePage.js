@@ -805,7 +805,7 @@ const LeavePage = () => {
                     <CTableBody>
                       {currentTableData.map(request => (
                         <CTableRow key={request.SNo}>
-                          <CTableHeaderCell scope="row">{request.id}</CTableHeaderCell>
+                          <CTableHeaderCell scope="row">{request.SNo}</CTableHeaderCell>
                           <CTableDataCell className="text-nowrap">
                             <div>{request.EmpName}</div>
                             <div style={{ fontSize: 'small' }}>({request.EmpID})</div>
