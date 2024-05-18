@@ -62,7 +62,7 @@ const LeavePage = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [reason, setReason] = useState('');
-  const [approveReason, setApproveReason] = useState('');
+  const [approveReason, setApproveReason] = useState('Approved');
   const [rejectReason, setRejectReason] = useState('');
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [halfDayChecked, setHalfDayChecked] = useState(false);

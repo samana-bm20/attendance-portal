@@ -190,7 +190,7 @@ const MainChart = () => {
         <CCol sm={6} xl={3} xxl={3}>
           <CCard className="mb-4">
             <CCardHeader style={{ backgroundColor: '#DC4C64' }}>
-              <h6>Requests</h6>
+              <h6>Leave Requests</h6>
             </CCardHeader>
             <CCardBody>
               <CChartDoughnut

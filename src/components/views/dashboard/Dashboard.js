@@ -347,7 +347,7 @@ const Dashboard = () => {
                     >
                       <CIcon icon={cilUser} style={{ color: 'blue' }} />
                       <div className="p-2">
-                        {record.empid} - {record.name}
+                        {record.EmpID} - {record.EmpName}
                       </div>
                     </CCol>
                   </CRow>

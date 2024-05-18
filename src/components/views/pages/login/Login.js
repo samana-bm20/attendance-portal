@@ -40,7 +40,7 @@ const Login = () => {
       toast.error("Please enter both username and password.");
       return;
     }
-    
+
     try {
       const response = await axios.get(
         `${Config.apiUrl}/login`,
@@ -94,7 +94,7 @@ const Login = () => {
                           }} />
                       </CCol>
                     </CRow>
-                    <p className="text-body-secondary">Sign In to your account</p>
+                    <p className="text-body-secondary">Sign In to HRMS Portal</p>
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
                         <CIcon icon={cilUser} />

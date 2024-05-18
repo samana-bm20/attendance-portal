@@ -19,12 +19,14 @@ const BarChart = () => {
     const [empLeaves, setEmpLeaves] = useState([]);
 
     useEffect(() => {
+       
         const fetchEmployeeLeaves = async () => {
             const response = await axios.get(`${Config.apiUrl}/empleaves`);
             setEmpLeaves(response.data.data);
         };
+
         fetchEmployeeLeaves();
-    }, [empLeaves]);
+    }, []);
 
     useEffect(() => {
         const extractedEmpNames = empLeaves.map(obj => obj.EmpName);

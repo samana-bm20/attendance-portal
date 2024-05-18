@@ -53,7 +53,7 @@ const Colors = () => {
       <CCard className="mb-4">
         <CCardHeader>
           Theme colors
-          <DocsLink href="https://coreui.io/docs/utilities/colors/" />
+          <DocsLink href="#" />
         </CCardHeader>
         <CCardBody>
           <CRow>

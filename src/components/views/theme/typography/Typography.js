@@ -8,7 +8,7 @@ const Typography = () => {
       <CCard className="mb-4">
         <CCardHeader>
           Headings
-          <DocsLink href="https://coreui.io/docs/content/typography/" />
+          <DocsLink href="#" />
         </CCardHeader>
         <CCardBody>
           <p>
