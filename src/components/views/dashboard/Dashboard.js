@@ -75,45 +75,117 @@ const Dashboard = () => {
   }, [user?.username]);
 
   const recordLogin = async () => {
-    let params = {
-      username: user?.username,
-      fullname: user?.name,
-      empid: user?.empid,
-    };
-    try {
-      const response = await axios.post(`${Config.apiUrl}/record`, params);
-      if (response.data.status === 'OK') {
-        toast.success("Attendance recorded successfully.", { autoClose: 3000 });
-        const record = await axios.get(`${Config.apiUrl}/time?username=${user?.username}`)
-        setLoginTime(record.data.data);
-        if (record.data.data) {
-          setInDisabled(true);
+    const userLatitude = 28.5397749;
+    const userLongitude = 77.1830131;
+    const radius = 100; //range in meters
+    
+    //Haversine Formula
+    const getDistanceFromLatLonInMeters = (lat1, lon1, lat2, lon2) => {
+      const R = 6371; // Radius of the earth in km
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLon = (lon2 - lon1) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c * 1000; // Distance in meters
+      return distance;
+    }
+  
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
+        const distance = getDistanceFromLatLonInMeters(userLat, userLon, userLatitude, userLongitude);
+  
+        if (distance <= radius) {
+          let params = {
+            username: user?.username,
+            fullname: user?.name,
+            empid: user?.empid,
+          };
+          try {
+            const response = await axios.post(`${Config.apiUrl}/record`, params);
+            if (response.data.status === 'OK') {
+              toast.success("Attendance recorded successfully.", { autoClose: 3000 });
+              const record = await axios.get(`${Config.apiUrl}/time?username=${user?.username}`)
+              setLoginTime(record.data.data);
+              if (record.data.data) {
+                setInDisabled(true);
+              } else {
+                setInDisabled(false);
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching login time', error);
+          }
         } else {
-          setInDisabled(false);
+          toast.error("You are not within the required location range.", { autoClose: 3000 });
         }
-      }
-    } catch (error) {
-      console.error('Error fetching login time', error)
+      }, (error) => {
+        console.error('Error getting location', error);
+        toast.error("Unable to get your location.", { autoClose: 3000 });
+      });
+    } else {
+      toast.error("Geolocation is not supported by this browser.", { autoClose: 3000 });
     }
   };
+  
 
   const recordLogout = async () => {
-    try {
-      const response = await axios.get(`${Config.apiUrl}/outtime?username=${user?.username}`);
-      if (response.data.status === 'OK') {
-        setShowOutTime(false);
-        toast.success("Out time recorded successfully.", { autoClose: 3000 });
-        const record = await axios.get(`${Config.apiUrl}/logout?username=${user?.username}`)
-        if (record.data.data) {
-          setOutDisabled(true);
-        } else {
-          setOutDisabled(false);
-        }
-      }
-    } catch (error) {
-      setShowOutTime(false);
-      toast.error('Error fetching logout time', { autoClose: 3000 });
+    const userLatitude = 28.5397749;
+    const userLongitude = 77.1830131;
+    const radius = 100; //range in meters
+    
+    //Haversine Formula
+    const getDistanceFromLatLonInMeters = (lat1, lon1, lat2, lon2) => {
+      const R = 6371; // Radius of the earth in km
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLon = (lon2 - lon1) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c * 1000; // Distance in meters
+      return distance;
     }
+  
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
+        const distance = getDistanceFromLatLonInMeters(userLat, userLon, userLatitude, userLongitude);
+  
+        if (distance <= radius) {
+          try {
+            const response = await axios.get(`${Config.apiUrl}/outtime?username=${user?.username}`);
+            if (response.data.status === 'OK') {
+              setShowOutTime(false);
+              toast.success("Out time recorded successfully.", { autoClose: 3000 });
+              const record = await axios.get(`${Config.apiUrl}/logout?username=${user?.username}`)
+              if (record.data.data) {
+                setOutDisabled(true);
+              } else {
+                setOutDisabled(false);
+              }
+            }
+          } catch (error) {
+            setShowOutTime(false);
+            toast.error('Error fetching logout time', { autoClose: 3000 });
+          }
+        } else {
+          toast.error("You are not within the required location range.", { autoClose: 3000 });
+        }
+      }, (error) => {
+        console.error('Error getting location', error);
+        toast.error("Unable to get your location.", { autoClose: 3000 });
+      });
+    } else {
+      toast.error("Geolocation is not supported by this browser.", { autoClose: 3000 });
+    }
+    
   };
 
   useEffect(() => {
@@ -193,7 +265,7 @@ const Dashboard = () => {
                     <CButton color="warning" disabled={outDisabled} onClick={() => {
                       setShowOutTime(!showOutTime);
                     }}>Mark Out Time</CButton>
-                    </CTooltip>
+                  </CTooltip>
                 </CCol>
               </CRow>
               <CModal visible={showOutTime} onClose={() => setShowOutTime(false)}>
