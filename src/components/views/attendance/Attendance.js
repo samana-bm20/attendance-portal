@@ -15,6 +15,7 @@ const Attendance = () => {
   const [workingDays, setWorkingDays] = useState(0);
   const [presentDays, setPresentDays] = useState(0);
   const [absentDays, setAbsentDays] = useState(0);
+  const [lateDays, setLateDays] = useState(0);
   const [viewDate, setViewDate] = useState(new Date());
 
   const handleActiveStartDateChange = ({ activeStartDate }) => {
@@ -24,16 +25,17 @@ const Attendance = () => {
   useEffect(() => {
     const fetchDayCount = async () => {
       try {
-        const response = await axios.get(`${Config.apiUrl}/countdays?empid=${user?.empid}`);
+        const response = await axios.get(`${Config.apiUrl}/monthwise?viewdate=${formatDate(viewDate)}&empid=${user?.empid}`);
         setWorkingDays(response.data.data[0].WorkingDays);
         setPresentDays(response.data.data[0].Present);
         setAbsentDays(response.data.data[0].Absent);
+        setLateDays(response.data.data[0].Late);
       } catch {
         console.error("error fetching days count.");
       }
     };
     fetchDayCount();
-  }, [user?.empid]);
+  }, [viewDate, user?.empid]);
 
   function formatDate(date) {
     var d = new Date(date),
@@ -184,7 +186,7 @@ const Attendance = () => {
       } else if (time == null) {
         return '';
       } else {
-        if ((parseInt(time.split(':')[0]) === 9 && parseInt(time.split(':')[1]) >= 0) ||
+        if ((parseInt(time.split(':')[0]) === 9 && parseInt(time.split(':')[1]) > 0) ||
           parseInt(time.split(':')[0]) > 9 || time.includes('PM')) {
           return 'late';
         } else {
@@ -221,6 +223,12 @@ const Attendance = () => {
               <div>
                 <h4>{presentDays}</h4>
                 <p>Present</p>
+              </div>
+            </CCol>
+            <CCol style={{ textAlign: 'center' }}>
+              <div>
+                <h4>{lateDays}</h4>
+                <p>Late</p>
               </div>
             </CCol>
             <CCol style={{ textAlign: 'center' }}>
