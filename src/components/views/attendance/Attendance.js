@@ -119,14 +119,26 @@ const Attendance = () => {
   useEffect(() => {
     const fetchLeaveRecord = async () => {
       try {
-        const response = await axios.get(`${Config.apiUrl}/fetch?empname=${user?.name}`);
+        const today = new Date();
+        const firstDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        let startDate, endDate;
+        if ((formatDate(viewDate) == formatDate(today))) {
+          startDate = formatDate(firstDate);
+          endDate = formatDate(lastDate);
+        } else {
+          startDate = formatDate(viewDate);
+          endDate = formatDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0));
+        }
+
+        const response = await axios.get(`${Config.apiUrl}/fetch?empname=${user?.name}&startDate=${startDate}&endDate=${endDate}`);
         setLeaveRecords(response.data.data);
       } catch {
         console.error("error fetching leave records.");
       }
     };
     fetchLeaveRecord();
-  }, [user?.name]);
+  }, [user?.name, viewDate]);
 
   const coloredDays = ({ date, view }) => {
     const formattedDate = date.toLocaleDateString('en-GB', {
@@ -148,11 +160,15 @@ const Attendance = () => {
         if (formattedDate == ToDate) {
           if (record) {
             const { time } = record;
-            if ((parseInt(time.split(':')[0]) < 2 || time.includes('AM'))) {
-              return 'firstPresent';
-            } else {
+            if (time == null) {
+              return 'firsthalf';
+            } else if (time == 'Absent') {
               return 'firstAbsent';
-            }
+            } else if (time == 'Off'){
+              return 'firstOff';
+            } else if ((parseInt(time.split(':')[0]) < 2 || time.includes('AM'))) {
+              return 'firstPresent';
+            } 
           } else {
             return 'firsthalf';
           }
@@ -160,14 +176,19 @@ const Attendance = () => {
           return 'approved';
         }
       } else if (SecondHalf) {
+        debugger
         if (formattedDate == FromDate) {
           if (record) {
             const { time } = record;
-            if ((parseInt(time.split(':')[0]) < 10 && time.includes('AM'))) {
-              return 'secondPresent';
-            } else {
+            if (time == null) {
+              return 'secondhalf';
+            } else if (time == 'Absent') {
               return 'secondAbsent';
-            }
+            } else if (time == 'Off') {
+              return 'secondOff';
+            } else if ((parseInt(time.split(':')[0]) < 10 && time.includes('AM'))) {
+              return 'secondPresent';
+            } 
           } else {
             return 'secondhalf';
           }
@@ -210,7 +231,7 @@ const Attendance = () => {
   return (
     <>
       <CCard className="mb-4">
-        <CCardHeader>Current Month</CCardHeader>
+        <CCardHeader>Month Statistics</CCardHeader>
         <CCardBody>
           <CRow>
             <CCol style={{ textAlign: 'center' }}>

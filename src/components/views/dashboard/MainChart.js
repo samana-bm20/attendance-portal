@@ -111,7 +111,7 @@ const MainChart = () => {
 
   const chart3Data = {
     data: {
-      labels: ['Pending', 'Approved', 'Rejected'],
+      labels: ['Pending', 'Approve', 'Reject'],
       datasets: [
         {
           backgroundColor: ['#adadad', '#3B71CA', '#DC4C64'],
@@ -133,7 +133,7 @@ const MainChart = () => {
       datasets: [
         {
           backgroundColor: ['#adadad', '#E4A11B'],
-          data: [leavesUsed, (15 - leavesUsed)],
+          data: [leavesUsed, (15 - leavesUsed) > 0 ? 15-leavesUsed : 0],
         },
       ],
     },
@@ -201,8 +201,8 @@ const MainChart = () => {
             <CCardFooter>
               <div style={{ fontSize: '13px' }}>
                 <span style={{ marginRight: '10px' }}>Pending: {chart3Data.data.datasets[0].data[0]}</span>
-                <span style={{ marginRight: '10px' }}>Approved: {chart3Data.data.datasets[0].data[1]}</span>
-                <span>Rejected: {chart3Data.data.datasets[0].data[2]}</span>
+                <span style={{ marginRight: '10px' }}>Approve: {chart3Data.data.datasets[0].data[1]}</span>
+                <span>Reject: {chart3Data.data.datasets[0].data[2]}</span>
               </div>
             </CCardFooter>
           </CCard>
@@ -222,6 +222,9 @@ const MainChart = () => {
               <div style={{ fontSize: '13px' }}>
                 <span style={{ marginRight: '10px' }}>Used: {chart4Data.data.datasets[0].data[0]}</span>
                 <span>Left: {chart4Data.data.datasets[0].data[1]}</span>
+                {leavesUsed > 15 && (
+                <span style={{ marginLeft: '10px' }}>LWP: {leavesUsed - 15}</span>                  
+                )}
               </div>
             </CCardFooter>
           </CCard>

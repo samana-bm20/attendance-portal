@@ -34,17 +34,33 @@ const Monthly = () => {
     const empid = localStorage.getItem('empid');
     const fullName = localStorage.getItem('name');
     const [selectedMonthYear, setSelectedMonthYear] = useState('');
-    const [reportMonth, setReportMonth] = useState('');
-    const [reportYear, setReportYear] = useState('');
+    const [reportMonth, setReportMonth] = useState((new Date().getMonth()) + 1);
+    const [reportYear, setReportYear] = useState(new Date().getFullYear());
     const [attendanceData, setAttendanceData] = useState([]);
     const [leaveRecords, setLeaveRecords] = useState([]);
     const [isFirstLoad, setIsFirstLoad] = useState(true);
     const [valueFirstLoad, setValueFirstLoad] = useState(true);
 
+    function formatDate(date) {
+        var d = new Date(date),
+          month = '' + (d.getMonth() + 1),
+          day = '' + d.getDate(),
+          year = d.getFullYear();
+    
+        if (month.length < 2)
+          month = '0' + month;
+        if (day.length < 2)
+          day = '0' + day;
+    
+        return [year, month, day].join('-');
+      }
+
     useEffect(() => {
         const fetchLeaveRecord = async () => {
             try {
-                const response = await axios.get(`${Config.apiUrl}/fetch?empname=${user?.name}`);
+                const startDate = new Date(reportYear, reportMonth - 1, 1);
+                const endDate = new Date(reportYear, reportMonth, 0);
+                const response = await axios.get(`${Config.apiUrl}/fetch?empname=${user?.name}&startDate=${formatDate(startDate)}&endDate=${formatDate(endDate)}`);
                 setLeaveRecords(response.data.data);
 
             } catch {
@@ -52,7 +68,7 @@ const Monthly = () => {
             }
         };
         fetchLeaveRecord();
-    }, [user?.name]);
+    }, [user?.name, reportMonth, reportYear]);
 
     useEffect(() => {
         const valuesMonthYear = () => {
@@ -103,7 +119,6 @@ const Monthly = () => {
     const handleMonthReport = async () => {
         try {
             const response = await axios.get(`${Config.apiUrl}/month?username=${user?.username}&month=${reportMonth}&year=${reportYear}`);
-            console.log(response.data.data);
             const holiday = await axios.get(`${Config.apiUrl}/holiday`);
             const updatedAttendanceData = await Promise.all(response.data.data.map(async (record) => {
                 if (record.time === null) {

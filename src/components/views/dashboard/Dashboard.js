@@ -75,9 +75,9 @@ const Dashboard = () => {
   }, [user?.username]);
 
   const recordLogin = async () => {
-    const userLatitude = 28.5397749;
-    const userLongitude = 77.1830131;
-    const radius = 100; //range in meters
+    const userLatitude = 28.540499161562323;
+    const userLongitude = 77.18584540547293;
+    const radius = 1000; //range in meters
     
     //Haversine Formula
     const getDistanceFromLatLonInMeters = (lat1, lon1, lat2, lon2) => {
@@ -92,7 +92,6 @@ const Dashboard = () => {
       const distance = R * c * 1000; // Distance in meters
       return distance;
     }
-  
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(async (position) => {
         const userLat = position.coords.latitude;

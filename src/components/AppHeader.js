@@ -97,6 +97,10 @@ const AppHeader = () => {
 
   const handlePasswordChange = async () => {
     try {
+      if (!newPassword || !confirmPassword) {
+        toast.error("Password fields cannot be empty.", { autoClose: 3000 });
+        return;
+      }
       if (newPassword === confirmPassword) {
         let params = {
           "EmpID": user?.empid,
@@ -140,10 +144,6 @@ const AppHeader = () => {
           </CNavItem>
         </CHeaderNav>
         <CHeaderNav>
-          <CTooltip
-            content="Mode"
-            trigger={['hover']}
-          >
             <CDropdown variant="nav-item" placement="bottom-end">
               <CDropdownToggle caret={false}>
                 {colorMode === 'dark' ? (
@@ -184,7 +184,6 @@ const AppHeader = () => {
                 </CDropdownItem>
               </CDropdownMenu>
             </CDropdown>
-          </CTooltip>
           <CTooltip
             content="Logout"
             trigger={['hover']}
