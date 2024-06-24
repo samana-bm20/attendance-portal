@@ -252,10 +252,6 @@ const Monthly = () => {
                 <CCardBody style={{ maxHeight: '320px', overflowY: 'auto', textAlign: 'center' }}>
                     <CRow className='mb-4'>
                         <CCol xs={6} sm={6} xl={3} style={{ marginTop: '5px' }}>
-                            <CTooltip
-                                content="Select month"
-                                trigger={['hover']}
-                            >
                                 <CDropdown>
                                     <CDropdownToggle
                                         color="secondary" caret >
@@ -267,7 +263,6 @@ const Monthly = () => {
                                         {months}
                                     </CDropdownMenu>
                                 </CDropdown>
-                            </CTooltip>
                         </CCol>
                         <CCol xs={6} sm={6} xl={9} style={{ marginTop: '5px' }}>
                             <CTooltip

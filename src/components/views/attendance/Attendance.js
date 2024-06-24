@@ -12,6 +12,7 @@ const Attendance = () => {
   const [calendarData, setCalendarData] = useState([]);
   const [leaveRecords, setLeaveRecords] = useState([]);
   const [holidays, setHolidays] = useState([]);
+  const [officialDuty, setOfficialDuty] = useState([]);
   const [workingDays, setWorkingDays] = useState(0);
   const [presentDays, setPresentDays] = useState(0);
   const [absentDays, setAbsentDays] = useState(0);
@@ -50,6 +51,8 @@ const Attendance = () => {
 
     return [year, month, day].join('-');
   }
+
+  //#region Calendar Report
 
   useEffect(() => {
     const handleCalendarReport = async () => {
@@ -91,6 +94,9 @@ const Attendance = () => {
       return false;
     }
   };
+  //#endregion
+
+  //#region Holiday
 
   useEffect(() => {
     const fetchHolidayRecord = async () => {
@@ -115,6 +121,9 @@ const Attendance = () => {
     };
     fetchHolidayRecord();
   }, [viewDate]);
+  //#endregion
+
+  //#region Leave
 
   useEffect(() => {
     const fetchLeaveRecord = async () => {
@@ -139,6 +148,36 @@ const Attendance = () => {
     };
     fetchLeaveRecord();
   }, [user?.name, viewDate]);
+  //#endregion
+
+  //#region Official Duty
+
+  useEffect(() => {
+    const fetchOfficialDuty = async () => {
+      try {
+        const today = new Date();
+        const firstDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        let startDate, endDate;
+        if ((formatDate(viewDate) == formatDate(today))) {
+          startDate = formatDate(firstDate);
+          endDate = formatDate(lastDate);
+        } else {
+          startDate = formatDate(viewDate);
+          endDate = formatDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0));
+        }
+
+        const response = await axios.get(`${Config.apiUrl}/fetchOfficialDuty?empname=${user?.name}&startDate=${startDate}&endDate=${endDate}`);
+        setOfficialDuty(response.data.data);
+      } catch {
+        console.error("error fetching OD records.");
+      }
+    };
+    fetchOfficialDuty();
+  }, [user?.name, viewDate]);
+  //#endregion
+
+  //#region Color Function
 
   const coloredDays = ({ date, view }) => {
     const formattedDate = date.toLocaleDateString('en-GB', {
@@ -151,6 +190,9 @@ const Attendance = () => {
     const leaveRecord = leaveRecords.find(record => (
       new Date(formattedDate) >= new Date(record.FromDate) &&
       new Date(formattedDate) <= new Date(record.ToDate) && record.Status === 'Approved'));
+    const officialDutyRecord = officialDuty.find(record => (
+      new Date(formattedDate) >= new Date(record.FromDate) &&
+      new Date(formattedDate) <= new Date(record.ToDate)));
 
     if (holidayRecord) {
       return 'holiday';
@@ -176,7 +218,6 @@ const Attendance = () => {
           return 'approved';
         }
       } else if (SecondHalf) {
-        debugger
         if (formattedDate == FromDate) {
           if (record) {
             const { time } = record;
@@ -197,6 +238,13 @@ const Attendance = () => {
         }
       } else {
         return 'approved';
+      }
+    } else if (officialDutyRecord){
+      const { Mode } = officialDutyRecord;
+      if (Mode == 'official-duty') {
+        return 'official-duty';
+      } else {
+        return 'work-from-home';
       }
     } else if (record) {
       const { time } = record;
@@ -228,31 +276,33 @@ const Attendance = () => {
 
   }, 1000);
 
+  //#endregion
+
   return (
     <>
       <CCard className="mb-4">
         <CCardHeader>Month Statistics</CCardHeader>
         <CCardBody>
           <CRow>
-            <CCol style={{ textAlign: 'center' }}>
+            <CCol style={{ textAlign: 'center' }} xs={6} xl={3}>
               <div>
                 <h4>{workingDays}</h4>
                 <p>Working Days</p>
               </div>
             </CCol>
-            <CCol style={{ textAlign: 'center' }}>
+            <CCol style={{ textAlign: 'center' }} xs={6} xl={3}>
               <div>
                 <h4>{presentDays}</h4>
                 <p>Present</p>
               </div>
             </CCol>
-            <CCol style={{ textAlign: 'center' }}>
+            <CCol style={{ textAlign: 'center' }} xs={6} xl={3}>
               <div>
                 <h4>{lateDays}</h4>
                 <p>Late</p>
               </div>
             </CCol>
-            <CCol style={{ textAlign: 'center' }}>
+            <CCol style={{ textAlign: 'center' }} xs={6} xl={3}>
               <div>
                 <h4>{absentDays}</h4>
                 <p>Absent</p>
@@ -262,19 +312,19 @@ const Attendance = () => {
         </CCardBody>
       </CCard>
       <CRow>
-        <CCol xs={12} sm={12} xl={6} xxl={6}>
+        <CCol xs={12} sm={12} xl={12} xxl={12}>
           <CCard className="mb-4">
             <CCardHeader>Calendar</CCardHeader>
             <CCardBody>
               <CRow >
-                <CCol xs={12} sm={8} xl={8} xxl={8} style={{ marginBottom: '5px', display: 'flex', justifyContent: 'center' }}>
+                <CCol xs={12} sm={8} xl={7} xxl={7} style={{ marginBottom: '5px', display: 'flex', justifyContent: 'center' }}>
                   <Calendar
                     tileClassName={coloredDays}
                     onActiveStartDateChange={handleActiveStartDateChange}
                   />
                 </CCol>
-                <CCol xs={12} sm={4} xl={4} xxl={4} style={{ display: 'flex', justifyContent: 'center' }}>
-                  <CCard className='p-2' style={{ justifyContent: 'center' }}>
+                <CCol xs={12} sm={4} xl={5} xxl={5} style={{ display: 'flex', justifyContent: 'center' }}>
+                  <CCard className='p-1 m-1' style={{ justifyContent: 'center', fontSize: 'small', minWidth: 'fit-content' }}>
                     <CRow className='p-1'>
                       <div>
                         <span
@@ -311,6 +361,8 @@ const Attendance = () => {
                         <span className='color-meaning'>Off</span>
                       </div>
                     </CRow>
+                  </CCard>
+                  <CCard className='p-1 m-1' style={{ justifyContent: 'center', fontSize: 'small', minWidth: 'fit-content' }}>
                     <CRow className='p-1'>
                       <div>
                         <span
@@ -329,13 +381,31 @@ const Attendance = () => {
                         <span className='color-meaning'>Holiday</span>
                       </div>
                     </CRow>
+                    <CRow className='p-1'>
+                      <div>
+                        <span
+                          className='color-represent'
+                          style={{ backgroundColor: '#36ad8f' }}>
+                        </span>
+                        <span className='color-meaning'>OD</span>
+                      </div>
+                    </CRow>
+                    <CRow className='p-1'>
+                      <div>
+                        <span
+                          className='color-represent'
+                          style={{ backgroundColor: '#C08B5C' }}>
+                        </span>
+                        <span className='color-meaning'>WFH</span>
+                      </div>
+                    </CRow>
                   </CCard>
                 </CCol>
               </CRow>
             </CCardBody>
           </CCard>
         </CCol>
-        <CCol xs={12} sm={12} xl={6} xxl={6}>
+        <CCol xs={12} sm={12} xl={12} xxl={12}>
           <Monthly />
         </CCol>
       </CRow>

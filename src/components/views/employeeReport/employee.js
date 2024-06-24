@@ -303,10 +303,6 @@ const EmployeeAttendance = () => {
           <CCardBody  style={{ overflowY: 'scroll', maxHeight: '500px' }}>
             <CRow className='mb-4'>
               <CCol xs={12} sm={12} md={3} xl={3} style={{ marginTop: '5px' }}>
-                <CTooltip
-                  content="Select month"
-                  trigger={['hover']}
-                >
                   <CDropdown>
                     <CDropdownToggle
                       color="secondary" caret >
@@ -318,13 +314,8 @@ const EmployeeAttendance = () => {
                       {months}
                     </CDropdownMenu>
                   </CDropdown>
-                </CTooltip>
               </CCol>
               <CCol xs={12} sm={12} md={3} xl={3} style={{ marginTop: '5px' }}>
-                <CTooltip
-                  content="Select employee"
-                  trigger={['hover']}
-                >
                   <CDropdown>
                     <CDropdownToggle
                       color="secondary" caret >
@@ -336,7 +327,6 @@ const EmployeeAttendance = () => {
                       {employeeOptions}
                     </CDropdownMenu>
                   </CDropdown>
-                </CTooltip>
               </CCol>
               <CCol xs={12} sm={12} md={6} xl={6} style={{ marginTop: '5px' }}>
                 <CTooltip

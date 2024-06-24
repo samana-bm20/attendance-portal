@@ -1,0 +1,265 @@
+.leave-application {
+  padding: 4rem 2rem;
+  margin: 3rem;
+}
+
+.leave-application h2 {
+  color: lightblue;
+}
+
+.request-panel {
+  margin: 1rem;
+}
+
+.request-card {
+  display: flex;
+  flex-wrap: wrap;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 9);
+  background-color: lightblue;
+  border-radius: 2rem;
+  padding: 1rem;
+  margin: 1rem;
+}
+
+.request-card .column {
+  flex: 1 1 25%;
+  padding: 5px;
+}
+
+.request-card label {
+  font-weight: bold;
+  font-size: small;
+  color: black;
+}
+
+.request-card-empid {
+  font-size: small;
+  font-weight: bold;
+}
+
+.request-card-empname {
+  font-size: x-large;
+  font-weight: bolder;
+}
+
+.request-card-leave {
+  font-size: larger;
+  font-weight: bold;
+}
+
+.request-card-date {
+  font-size: large;
+  font-weight: bold;
+  color: #f55142;
+  margin-bottom: 0.3rem;
+}
+
+.request-card-day {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+}
+
+.request-card-reason {
+  padding: 0.3rem;
+  font-weight: bold;
+  color: white;
+  background-color: #222;
+  border-radius: 1.5rem;
+}
+
+.request-card-reason label {
+  color: white;
+}
+
+.leave-status {
+  margin: 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.approve-btn {
+
+  border-radius: 4px;
+  background: #019801;
+  color: white;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: bold;
+  outline: 0;
+  padding: 5px 6px;
+  text-decoration: none;
+  text-shadow: 0 -1px 0 #054805;
+  transition: padding 50ms ease-in-out, border-top-width 50ms ease-in-out, box-shadow 150ms ease-in-out;
+}
+
+.approve-btn:hover {
+  background: #02c102;
+  background: linear-gradient(to bottom, #02c102 0%, #1d881d 100%);
+  box-shadow: inset 0 1px 0 #34bc34, 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+.approve-btn:active {
+  border-top-width: 2px;
+  box-shadow: none;
+  padding-bottom: 8px;
+}
+
+.reject-btn {
+  padding: 5px 12px;
+  background: #ec0606;
+  border: 1px solid #bf0303;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 #f91c1c;
+  color: white;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: bold;
+  outline: 0;
+  text-decoration: none;
+  text-shadow: 0 -1px 0 #d40303;
+  background: linear-gradient(to bottom, #ec0606 0%, #bf0303 100%);
+  transition: padding 50ms ease-in-out, border-top-width 50ms ease-in-out, box-shadow 150ms ease-in-out;
+}
+
+.reject-btn:hover {
+  background: #f90e0e;
+  background: linear-gradient(to bottom, #f90e0e 0%, #cf1818 100%);
+  box-shadow: inset 0 1px 0 #f12d2d, 0 0 10px rgba(0, 0, 0, 0.4);
+}
+
+.reject-btn:active {
+  border-top-width: 2px;
+  box-shadow: none;
+  padding-bottom: 8px;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+.approve-dialog {
+  background-color: white;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 9);
+  padding: 1.5rem;
+  margin: -11rem 28rem;
+  border-radius: 1rem;
+  width: fit-content;
+  display: grid;
+  position: absolute;
+  z-index: 999;
+}
+
+.confirmation-text {
+  font-weight: bold;
+}
+
+.approve-buttons button {
+  touch-action: manipulation;
+  background-image: linear-gradient(#4098ff, #4058ff 62%, #4075ff);
+  border: .5px solid #3247cf;
+  border-radius: 8px;
+  box-shadow: rgba(0, 0, 0, .12) 0 1px 3px, rgba(0, 0, 0, .14) 0 1px .5px, rgba(182, 229, 255, .4) 0 1px .5px inset, rgba(23, 45, 202, .46) 0 -1px .5px inset, #233ced 0 0 0 .5px inset;
+  color: #fff;
+  font-weight: 600;
+  outline: 3px #fff;
+  outline-offset: 0;
+  position: relative;
+  text-shadow: #233ced 0 -1px .5px;
+  top: 0;
+  display: inline-block;
+  font-size: 15px;
+  line-height: 100%;
+  padding: 8px 10px;
+  margin: 1rem 4rem 0;
+  transition-property: outline-offset, border-color, transform;
+  transition-duration: .2s;
+}
+
+.approve-buttons button:active,
+.approve-buttons button:hover {
+  outline: 0;
+}
+
+.approve-buttons button:hover {
+  background-image: linear-gradient(#40a6ff, #4058ff 62%, #4075ff);
+  box-shadow: rgba(0, 0, 0, .12) 0 2px 6px, rgba(0, 0, 0, .14) 0 1px .5px, rgba(182, 229, 255, .4) 0 1px .5px inset, rgba(23, 45, 202, .46) 0 -1px .5px inset, #233ced 0 0 0 .5px inset;
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+.approve-buttons button:active {
+  background-image: linear-gradient(#0a40ce, #4058ff 38%, #40a0ff);
+  border-color: #192ba1;
+  box-shadow: #0b1c95 0 1px inset, transparent 0 -1px .5px inset, rgba(13, 33, 176, .53) 0 2px .5px inset, rgba(35, 60, 237, .31) 0 0 0 .5px inset;
+  text-shadow: #233ced 0 1px .5px;
+  transform: scale(.98);
+}
+
+.reject-dialog {
+  background-color: white;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 9);
+  padding: 1.5rem;
+  margin: -11rem 28rem;
+  border-radius: 1rem;
+  width: fit-content;
+  display: grid;
+  position: absolute;
+  z-index: 999;
+
+}
+
+.reject-reason textarea {
+  width: 100%;
+  padding: 0.2rem;
+}
+
+.reject-buttons button {
+  touch-action: manipulation;
+  background-image: linear-gradient(#4098ff, #4058ff 62%, #4075ff);
+  border: .5px solid #3247cf;
+  border-radius: 8px;
+  box-shadow: rgba(0, 0, 0, .12) 0 1px 3px, rgba(0, 0, 0, .14) 0 1px .5px, rgba(182, 229, 255, .4) 0 1px .5px inset, rgba(23, 45, 202, .46) 0 -1px .5px inset, #233ced 0 0 0 .5px inset;
+  color: #fff;
+  font-weight: 600;
+  outline: 3px #fff;
+  outline-offset: 0;
+  position: relative;
+  text-shadow: #233ced 0 -1px .5px;
+  top: 0;
+  display: inline-block;
+  font-size: 15px;
+  line-height: 100%;
+  padding: 8px 10px;
+  margin: 1rem 3rem 0;
+  transition-property: outline-offset, border-color, transform;
+  transition-duration: .2s;
+}
+
+.reject-buttons button:active,
+.reject-buttons button:hover {
+  outline: 0;
+}
+
+.reject-buttons button:hover {
+  background-image: linear-gradient(#40a6ff, #4058ff 62%, #4075ff);
+  box-shadow: rgba(0, 0, 0, .12) 0 2px 6px, rgba(0, 0, 0, .14) 0 1px .5px, rgba(182, 229, 255, .4) 0 1px .5px inset, rgba(23, 45, 202, .46) 0 -1px .5px inset, #233ced 0 0 0 .5px inset;
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+.reject-buttons button:active {
+  background-image: linear-gradient(#0a40ce, #4058ff 38%, #40a0ff);
+  border-color: #192ba1;
+  box-shadow: #0b1c95 0 1px inset, transparent 0 -1px .5px inset, rgba(13, 33, 176, .53) 0 2px .5px inset, rgba(35, 60, 237, .31) 0 0 0 .5px inset;
+  text-shadow: #233ced 0 1px .5px;
+  transform: scale(.98);
+}

@@ -54,8 +54,14 @@ const AppHeader = () => {
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [menuTooltip, setMenuTooltip] = useState('Hide Menu');
 
   const sidebarShow = useSelector((state) => state.sidebarShow);
+
+  const menuToggle = () => {
+    dispatch({ type: 'set', sidebarShow: !sidebarShow })
+    setMenuTooltip(sidebarShow == false ? 'Hide Menu' : 'Show Menu')
+  }
 
   useEffect(() => {
     document.addEventListener('scroll', () => {
@@ -126,11 +132,11 @@ const AppHeader = () => {
     <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
       <CContainer className="border-bottom px-4" fluid>
         <CTooltip
-          content="Menu"
+          content={menuTooltip}
           trigger={['hover']}
         >
           <CHeaderToggler
-            onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
+            onClick={menuToggle}
             style={{ marginInlineStart: '-14px' }}
           >
             <CIcon icon={cilMenu} size="lg" />

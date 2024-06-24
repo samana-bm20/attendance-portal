@@ -37,9 +37,9 @@ const Dashboard = () => {
   const [todayLeaves, setTodayLeaves] = useState([])
   const [birthdays, setBirthdays] = useState([])
   const [inDisabled, setInDisabled] = useState(false)
-  const [outDisabled, setOutDisabled] = useState(false)
+  const [outDisabled, setOutDisabled] = useState(true)
   const [showOutTime, setShowOutTime] = useState(false);
-
+  let toastId = null;
 
   useEffect(() => {
     const fetchLoginTime = async () => {
@@ -47,38 +47,31 @@ const Dashboard = () => {
         const response = await axios.get(`${Config.apiUrl}/time?username=${user?.username}`)
         setLoginTime(response.data.data);
         if (response.data.data) {
-          setInDisabled(true);
+          const record = await axios.get(`${Config.apiUrl}/logout?username=${user?.username}`)
+          if (record.data.data) {
+            setInDisabled(true);
+            setOutDisabled(true);
+          } else {
+            setInDisabled(true);
+            setOutDisabled(false);
+          }
         } else {
           setInDisabled(false);
+          setOutDisabled(true);
         }
       } catch (error) {
         console.error('Error fetching login time', error)
       }
     };
     fetchLoginTime();
-  }, [user?.username]);
 
-  useEffect(() => {
-    const fetchLogoutTime = async () => {
-      try {
-        const response = await axios.get(`${Config.apiUrl}/logout?username=${user?.username}`)
-        if (response.data.data) {
-          setOutDisabled(true);
-        } else {
-          setOutDisabled(false);
-        }
-      } catch (error) {
-        console.error('Error fetching login time', error)
-      }
-    };
-    fetchLogoutTime();
   }, [user?.username]);
 
   const recordLogin = async () => {
     const userLatitude = 28.540499161562323;
     const userLongitude = 77.18584540547293;
     const radius = 1000; //range in meters
-    
+
     //Haversine Formula
     const getDistanceFromLatLonInMeters = (lat1, lon1, lat2, lon2) => {
       const R = 6371; // Radius of the earth in km
@@ -97,7 +90,7 @@ const Dashboard = () => {
         const userLat = position.coords.latitude;
         const userLon = position.coords.longitude;
         const distance = getDistanceFromLatLonInMeters(userLat, userLon, userLatitude, userLongitude);
-  
+
         if (distance <= radius) {
           let params = {
             username: user?.username,
@@ -107,36 +100,39 @@ const Dashboard = () => {
           try {
             const response = await axios.post(`${Config.apiUrl}/record`, params);
             if (response.data.status === 'OK') {
-              toast.success("Attendance recorded successfully.", { autoClose: 3000 });
+              if (toastId) toast.dismiss(toastId);
+              toastId = toast.success("Attendance recorded successfully.", { autoClose: 3000 });
               const record = await axios.get(`${Config.apiUrl}/time?username=${user?.username}`)
               setLoginTime(record.data.data);
               if (record.data.data) {
                 setInDisabled(true);
-              } else {
-                setInDisabled(false);
+                setOutDisabled(false);
               }
             }
           } catch (error) {
             console.error('Error fetching login time', error);
           }
         } else {
-          toast.error("You are not within the required location range.", { autoClose: 3000 });
+          if (toastId) toast.dismiss(toastId);
+          toastId = toast.error("You are not within the required location range.", { autoClose: 3000 });
         }
       }, (error) => {
         console.error('Error getting location', error);
-        toast.error("Unable to get your location.", { autoClose: 3000 });
+        if (toastId) toast.dismiss(toastId);
+        toastId = toast.error("Unable to get your location.", { autoClose: 3000 });
       });
     } else {
-      toast.error("Geolocation is not supported by this browser.", { autoClose: 3000 });
+      if (toastId) toast.dismiss(toastId);
+      toastId = toast.error("Geolocation is not supported by this browser.", { autoClose: 3000 });
     }
   };
-  
+
 
   const recordLogout = async () => {
-    const userLatitude = 28.5397749;
-    const userLongitude = 77.1830131;
-    const radius = 100; //range in meters
-    
+    const userLatitude = 28.540499161562323;
+    const userLongitude = 77.18584540547293;
+    const radius = 1000; //range in meters
+
     //Haversine Formula
     const getDistanceFromLatLonInMeters = (lat1, lon1, lat2, lon2) => {
       const R = 6371; // Radius of the earth in km
@@ -150,41 +146,44 @@ const Dashboard = () => {
       const distance = R * c * 1000; // Distance in meters
       return distance;
     }
-  
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(async (position) => {
         const userLat = position.coords.latitude;
         const userLon = position.coords.longitude;
         const distance = getDistanceFromLatLonInMeters(userLat, userLon, userLatitude, userLongitude);
-  
+
         if (distance <= radius) {
           try {
             const response = await axios.get(`${Config.apiUrl}/outtime?username=${user?.username}`);
             if (response.data.status === 'OK') {
               setShowOutTime(false);
-              toast.success("Out time recorded successfully.", { autoClose: 3000 });
+              if (toastId) toast.dismiss(toastId);
+              toastId = toast.success("Out time recorded successfully.", { autoClose: 3000 });
               const record = await axios.get(`${Config.apiUrl}/logout?username=${user?.username}`)
               if (record.data.data) {
                 setOutDisabled(true);
-              } else {
-                setOutDisabled(false);
               }
             }
           } catch (error) {
             setShowOutTime(false);
-            toast.error('Error fetching logout time', { autoClose: 3000 });
+            if (toastId) toast.dismiss(toastId);
+            toastId = toast.error('Error fetching logout time', { autoClose: 3000 });
           }
         } else {
-          toast.error("You are not within the required location range.", { autoClose: 3000 });
+          if (toastId) toast.dismiss(toastId);
+          toastId = toast.error("You are not within the required location range.", { autoClose: 3000 });
         }
       }, (error) => {
         console.error('Error getting location', error);
-        toast.error("Unable to get your location.", { autoClose: 3000 });
+        if (toastId) toast.dismiss(toastId);
+        toastId = toast.error("Unable to get your location.", { autoClose: 3000 });
       });
     } else {
-      toast.error("Geolocation is not supported by this browser.", { autoClose: 3000 });
+      if (toastId) toast.dismiss(toastId);
+      toastId = toast.error("Geolocation is not supported by this browser.", { autoClose: 3000 });
     }
-    
+
   };
 
   useEffect(() => {
@@ -248,22 +247,34 @@ const Dashboard = () => {
             </CCardHeader>
             <CCardBody>
               <CRow>
-                <CCol>
+                <CCol style={{ display: 'flex', justifyContent: 'center' }}>
                   <CTooltip
                     content="Mark attendance"
                     trigger={['hover']}
                   >
-                    <CButton color="success" disabled={inDisabled} onClick={recordLogin}>Mark In Time</CButton>
+                    <CButton 
+                    color="success" 
+                    disabled={inDisabled} 
+                    style={{ width: 'max-content', marginBottom: '5px' }} 
+                    onClick={recordLogin}>
+                      Mark In Time
+                      </CButton>
                   </CTooltip>
                 </CCol>
-                <CCol>
+                <CCol style={{ display: 'flex', justifyContent: 'center' }}>
                   <CTooltip
                     content="Mark logout time"
                     trigger={['hover']}
                   >
-                    <CButton color="warning" disabled={outDisabled} onClick={() => {
+                    <CButton 
+                    color="warning" 
+                    disabled={outDisabled}
+                    style={{ width: 'max-content', marginBottom: '5px' }} 
+                    onClick={() => {
                       setShowOutTime(!showOutTime);
-                    }}>Mark Out Time</CButton>
+                    }}>
+                      Mark Out Time
+                      </CButton>
                   </CTooltip>
                 </CCol>
               </CRow>
@@ -294,8 +305,8 @@ const Dashboard = () => {
       <CRow xs={{ gutter: 3 }}>
         <CCol sm={12} xl={6} xxl={6}>
           <CCard className="mb-4">
-            <CCardHeader>Leave Requests</CCardHeader>
-            <CCardBody>
+            <CCardHeader>Upcoming Leave Requests</CCardHeader>
+            <CCardBody style={{ overflowY: 'scroll', maxHeight: '200px', minHeight: '200px' }}>
               <CTable align="middle" className="mb-0 border" hover responsive>
                 <CTableHead className="text-nowrap">
                   <CTableRow>
@@ -402,7 +413,7 @@ const Dashboard = () => {
         <CCol sm={12} xl={3} xxl={3}>
           <CCard className="mb-2">
             <CCardHeader>Who's on Leave Today</CCardHeader>
-            <CCardBody style={{ overflowY: 'scroll', maxHeight: '200px' }}>
+            <CCardBody style={{ overflowY: 'scroll', maxHeight: '200px', minHeight: '200px' }}>
               <CRow className="mb-4">
                 <CCol>On Leave: {todayLeaves.length}</CCol>
               </CRow>
@@ -429,7 +440,7 @@ const Dashboard = () => {
         <CCol sm={12} xl={3} xxl={3}>
           <CCard className="mb-2">
             <CCardHeader>Upcoming Birthdays</CCardHeader>
-            <CCardBody style={{ overflowY: 'scroll', maxHeight: '200px' }}>
+            <CCardBody style={{ overflowY: 'scroll', maxHeight: '200px', minHeight: '200px' }}>
               {birthdays ?
                 (birthdays.map((record, index) => (
                   <CRow key={index}>

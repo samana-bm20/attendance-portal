@@ -1,3 +1,4 @@
+// change on 07/06/2024
 import { legacy_createStore as createStore } from 'redux'
 import moment from "moment";
 const getUser = () => {
@@ -27,7 +28,7 @@ const getUser = () => {
     user: getUser(),
     sidebarShow: true,
     theme: 'light',
-    sidebarUnfoldable:true
+    sidebarUnfoldable:false //code change
   };
    
 
@@ -40,19 +41,13 @@ const changeState = (state = initialState, { type, ...rest }) => {
             sessionStorage.setItem("user", JSON.stringify(rest.payload[0]));
             return saveUserState;
 
-        case "Update_User":
-            const updateUserState = {
-                user: { ...state.user, ...rest.payload[0] },
-            };
-            sessionStorage.setItem("user", JSON.stringify(updateUserState.user));
-            return updateUserState;
 
         case "Remove_User":
             const removeUserState = {
                 user: null,
             };
             sessionStorage.removeItem("user");
-            window.location.href = "/";
+            window.location.href = "/hrms-mlinfomap";
             return removeUserState;
 
         case "set":

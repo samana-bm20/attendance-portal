@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
     base: './',
     build: {
       outDir: 'build',
+      chunkSizeWarningLimit: 1000,
     },
     css: {
       postcss: {

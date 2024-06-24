@@ -9,17 +9,17 @@ import { CBadge, CNavLink, CSidebarNav } from '@coreui/react'
 
 export const AppSidebarNav = ({ items }) => {
   const user = useSelector((state) => state.user);
-  
+
   const navLink = (name, icon, badge, indent = false) => {
     return (
       <>
         {icon
           ? icon
           : indent && (
-              <span className="nav-icon">
-                <span className="nav-icon-bullet"></span>
-              </span>
-            )}
+            <span className="nav-icon">
+              <span className="nav-icon-bullet"></span>
+            </span>
+          )}
         {name && name}
         {badge && (
           <CBadge color={badge.color} className="ms-auto">
@@ -63,8 +63,16 @@ export const AppSidebarNav = ({ items }) => {
       <CSidebarNav as={SimpleBar}>
         {user?.userType == 1 && items &&
           items.map((item, index) => (navItem(item, index)))}
-        {user?.userType == 2 && items &&
-          items.map((item, index) => (item.name !== 'Employee Attendance' ? navItem(item, index) : null))}
+        {user?.userType === 2 && items &&
+          items.map((item, index) => (
+            //code change start
+            item.name !== 'Employee Data' && 
+            item.name !== 'Employee Attendance' && 
+            item.name !== 'Troubleshoot' && 
+            item.name !== 'Summary Report' ? navItem(item, index) : null
+            //code change end
+          ))
+        }
       </CSidebarNav>
     </>
   )

@@ -7,7 +7,7 @@ const DocsCallout = (props) => {
 
   const plural = name.slice(-1) === 's' ? true : false
 
-  const _href = `https://coreui.io/react/docs/${href}`
+  const _href = `#`
 
   return (
     <CCallout color="info" className="bg-white">

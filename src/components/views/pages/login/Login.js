@@ -23,7 +23,7 @@ import {
   CTooltip,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser } from '@coreui/icons'
+import { cilLockLocked, cilUser, cilLockUnlocked } from '@coreui/icons';
 import { toast } from "react-toastify";
 
 import logo from 'src/assets/MLInfomap.png'
@@ -32,12 +32,29 @@ import logoname from 'src/assets/logoname.png'
 const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [Password, setPassword_] = useState('password');
+  const [iconType, setIconType] = useState(cilLockLocked);
+  const [passwordTooltip, setPasswordTooltip] = useState('Show Password');
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  let toastId = null;
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleLogin(e);
+    }
+  };
+
+  const showPassword = () => {
+    setPasswordTooltip(Password == 'password'? 'Hide Password' : 'Show Password');
+    setPassword_(Password == 'password' ? 'text' : 'password');
+    setIconType(iconType == cilLockLocked ? cilLockUnlocked : cilLockLocked);
+  }
 
   const handleLogin = async () => {
     if (!username || !password) {
-      toast.error("Please enter both username and password.");
+      if (toastId) toast.dismiss(toastId);
+      toastId = toast.error("Please enter both username and password.", { autoClose: 3000 });
       return;
     }
 
@@ -52,7 +69,7 @@ const Login = () => {
           },
         }
       );
-      
+
       if (response.data.status === "OK") {
         const expireAt = moment()
           .add(Config.sessionExpiredTime, "minutes")
@@ -62,11 +79,13 @@ const Login = () => {
         navigate("/dashboard");
       } else {
         // Handle invalid credentials
-        toast.error('Invalid user credentials');
+        if (toastId) toast.dismiss(toastId);
+        toastId = toast.error('Invalid user credentials', { autoClose: 3000 });
       }
     } catch (error) {
       // Handle errors
-      toast.error(error.response?.data?.message || "An error occurred while logging in.");
+      if (toastId) toast.dismiss(toastId);
+      toastId = toast.error("An error occurred while logging in.", { autoClose: 3000 });
     }
   };
 
@@ -107,28 +126,29 @@ const Login = () => {
                           placeholder="Username"
                           autoComplete="username"
                           value={username}
-                          onChange={(e) => {
-                            setUsername(e.target.value);
-                          }} />
+                          onChange={(e) => setUsername(e.target.value)}
+                          onKeyPress={handleKeyPress}
+                        />
                       </CTooltip>
                     </CInputGroup>
-                    <CInputGroup className="mb-4">
+                    <CInputGroup className="mb-4" style={{ cursor: 'pointer' }}>
                       <CInputGroupText>
-                        <CIcon icon={cilLockLocked} />
+                        <CTooltip content={passwordTooltip} trigger={['hover']}>
+                          <CIcon icon={iconType} onClick={showPassword} />
+                        </CTooltip>
                       </CInputGroupText>
                       <CTooltip
                         content="password"
                         trigger={['hover']}
                       >
-                      <CFormInput
-                        type="password"
-                        placeholder="Password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                        }}
-                      />
+                        <CFormInput
+                          type={Password}
+                          placeholder="Password"
+                          autoComplete="current-password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          onKeyPress={handleKeyPress}
+                        />
                       </CTooltip>
                     </CInputGroup>
                     <CRow>
@@ -154,4 +174,4 @@ const Login = () => {
   )
 }
 
-export default Login
+export default Login;

@@ -1,5 +1,5 @@
 import AdminAppContent from './AdminAppContent'
-import UserAppContent from './UserAppContent'
+import UserAppContent from './UserAppContent' 
 import AppFooter from './AppFooter'
 import AppHeader from './AppHeader'
 import AppSidebar from './AppSidebar'

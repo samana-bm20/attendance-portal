@@ -76,7 +76,7 @@
   text-align: center;
   text-transform: uppercase;
   font: inherit;
-  font-size: x-small;
+  font-size: xx-small;
   font-weight: 900;
 }
 
@@ -173,6 +173,16 @@
 
   .react-calendar .react-calendar__tile[class*='late'] {
     background-color: lightcoral !important;
+    border: #fff solid 0.5px;
+  }
+ 
+  .react-calendar .react-calendar__tile[class*='official-duty'] {
+    background-color: #36ad8f !important;
+    border: #fff solid 0.5px;
+  }
+
+  .react-calendar .react-calendar__tile[class*='work-from-home'] {
+    background-color: #C08B5C !important;
     border: #fff solid 0.5px;
   }
 
