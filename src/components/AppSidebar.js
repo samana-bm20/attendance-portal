@@ -107,7 +107,7 @@ const AppSidebar = () => {
                     marginInlineStart: '8px', 
                     backgroundColor: 'white',
                     padding: '5px', borderRadius: '5px',
-                    width: '40px', height: '40px'
+                    width: '35px', height: '35px'
                   }} />
               </CCol>
               <CCol>
@@ -116,7 +116,7 @@ const AppSidebar = () => {
                     style={{
                       backgroundColor: 'white',
                       padding: '5px', borderRadius: '5px',
-                      width: '150px', height: '40px'
+                      width: '125px', height: '35px'
                     }} />
                 )}
 

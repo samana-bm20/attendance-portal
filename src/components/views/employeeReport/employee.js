@@ -34,6 +34,7 @@ const EmployeeAttendance = () => {
   const [reportYear, setReportYear] = useState('');
   const [dateHeaders, setDateHeaders] = useState([]);
   const [employeeData, setEmployeeData] = useState([]);
+  const [processedEmployeeData, setProcessedEmployeeData] = useState([]);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [valueFirstLoad, setValueFirstLoad] = useState(true);
   let keys;
@@ -97,7 +98,7 @@ const EmployeeAttendance = () => {
       if (empIdName == 'All Employees') {
         setDateHeaders([]);
         setEmployeeData([]);
-        const response = await axios.get(`${Config.apiUrl}/admin?month=${reportMonth}&year=${reportYear}`);
+        const response = await axios.get(`${Config.apiUrl}/allEmp?month=${reportMonth}&year=${reportYear}`);
         keys = Object.keys(response.data.data[0]);
         keys.forEach((item, index) => {
           setDateHeaders(prevDateHeaders => [...prevDateHeaders, item]);
@@ -141,7 +142,7 @@ const EmployeeAttendance = () => {
       const currentMonth = new Date().getMonth() + 1;
       const currentYear = new Date().getFullYear();
       try {
-        const response = await axios.get(`${Config.apiUrl}/admin?month=${currentMonth}&year=${currentYear}`);
+        const response = await axios.get(`${Config.apiUrl}/allEmp?month=${currentMonth}&year=${currentYear}`);
         const responseData = response.data.data;
 
         // Extract date headers from the first object
@@ -173,25 +174,89 @@ const EmployeeAttendance = () => {
     }
   }, [isFirstLoad]);
 
+  const preprocessData = async (employeeData) => {
+    const processedData = await Promise.all(employeeData.map(async (employee) => {
+      const processedRow = await Promise.all(Object.values(employee).map(async (value, columnIndex) => {
+        const text = await formatCellText(value, columnIndex, employeeData, dateHeaders[columnIndex]);
+        const style = await getStyle(value, columnIndex, employeeData, dateHeaders[columnIndex]);
+        return { text, style };
+      }));
+      return processedRow;
+    }));
+    return processedData;
+  };
 
-  const formatCellText = (cell, columnIndex, employeeData) => {
-    const allAbsent = employeeData.every((employee) => {
-      const value = Object.values(employee)[columnIndex];
-      return !value || value === 'Absent';
-    });
+  useEffect(() => {
+    const processData = async () => {
+      const data = await preprocessData(employeeData);
+      setProcessedEmployeeData(data);
+    };
+    processData();
+  }, [employeeData]);
 
-    if (allAbsent) {
-      return 'Off';
-    } else if (!cell || cell === null) {
-      return 'Absent';
+
+  const formatCellText = async (cell, columnIndex, employeeData, header) => {
+    if (employeeData.length == 1) {
+      if (!cell || cell == null) {
+        const datePart = header.split(' ')[0];
+        try {
+          const response = await axios.get(`${Config.apiUrl}/absent?date=${datePart}`);
+          const result = response.data.data; // Assuming the API response is a single integer
+
+          if (result == 1) {
+            return 'Off';
+          } else if (result == 0) {
+            return 'Absent';
+          }
+        } catch (error) {
+          console.error('API call failed:', error);
+          return 'Error';
+        }
+      } else {
+        return cell;
+      }
     } else {
-      return cell;
-    }
-  }
+      const allAbsent = employeeData.every((employee) => {
+        const value = Object.values(employee)[columnIndex];
+        return !value || value === 'Absent';
+      });
 
-  const getStyle = (cell, columnIndex, employeeData) => {
-    try {
-      const defaultStyles = { backgroundColor: '', color: '' };
+      if (allAbsent) {
+        return 'Off';
+      } else if (!cell || cell === null) {
+        return 'Absent';
+      } else {
+        return cell;
+      }
+    }
+  };
+
+  const getStyle = async (cell, columnIndex, employeeData, header) => {
+    const defaultStyles = { backgroundColor: '', color: '', minWidth: '105px' };
+
+    if (employeeData.length == 1) {
+      if (!cell || cell == null) {
+        const datePart = header.split(' ')[0];
+        try {
+          const response = await axios.get(`${Config.apiUrl}/absent?date=${datePart}`);
+          const result = response.data.data; // Assuming the API response is a single integer
+
+          if (result == 1) {
+            return { ...defaultStyles, backgroundColor: 'grey', color: 'black' };
+          } else if (result == 0) {
+            return { ...defaultStyles, backgroundColor: 'gold', color: 'black' };
+          }
+        } catch (error) {
+          console.error('API call failed:', error);
+          return defaultStyles;
+        }
+      } else {
+        if ((parseInt(cell.split(':')[0]) === 9 && parseInt(cell.split(':')[1]) > 0) ||
+          parseInt(cell.split(':')[0]) > 9 || cell.includes('PM')) {
+          return { ...defaultStyles, backgroundColor: 'red', color: 'white' };
+        }
+      }
+    } else {
       const allAbsent = employeeData.every((employee) => {
         const value = Object.values(employee)[columnIndex];
         return !value || value === 'Absent';
@@ -207,11 +272,11 @@ const EmployeeAttendance = () => {
           return { ...defaultStyles, backgroundColor: 'red', color: 'white' };
         }
       }
-      return defaultStyles;
-    } catch (error) {
-      //console.error(error);
     }
-  }
+
+    return defaultStyles;
+  };
+
 
   const downloadTableAsXLSX = async () => {
     const table = document.getElementById('employeeAttendance');
@@ -219,78 +284,177 @@ const EmployeeAttendance = () => {
       return;
     }
 
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet(`${selectedMonthYear}`);
-    const rows = table.querySelectorAll('tr');
-    const columnName = rows[0];
-    const numHeaderCells = columnName.querySelectorAll('th').length;
-
-    const heading = `Attendance Report - ${selectedMonthYear}`;
-    worksheet.addRow([heading]);
-    worksheet.mergeCells(1, 1, 1, numHeaderCells); // Merge cells for the heading
-    const headingCell = worksheet.getCell(1, 1);
-    headingCell.value = heading;
-    headingCell.font = { bold: true };
-    headingCell.alignment = { horizontal: 'center' };
-    headingCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF00' } };
-    headingCell.border = {
-      top: { style: 'thin' },
-      left: { style: 'thin' },
-      bottom: { style: 'thin' },
-      right: { style: 'thin' }
-    };
-
-    // Transpose column headers
-    const columnHeaders = Array.from(columnName.querySelectorAll('th')).map(cell => cell.innerText);
-    for (let i = 0; i < numHeaderCells; i++) {
-      worksheet.getCell(2, i + 1).value = columnHeaders[i];
-      worksheet.getCell(2, i + 1).font = { bold: true };
-      worksheet.getCell(2, i + 1).alignment = { horizontal: 'center' };
-      worksheet.getCell(2, i + 1).border = {
+    if (employeeData.length == 1) {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet(`${employeeID} Report (${selectedMonthYear})`);
+      const rows = table.querySelectorAll('tr');
+      const columnName = rows[0];
+      const numHeaderCells = columnName.querySelectorAll('th').length;
+      let rowCount = 0;
+    
+      const heading = `${empIdName} Attendance Report for ${selectedMonthYear}`;
+      worksheet.addRow([heading]);
+      rowCount += 1;
+      worksheet.mergeCells(1, 1, 1, numHeaderCells);
+      const headingCell = worksheet.getCell(1, 1);
+      headingCell.value = heading;
+      headingCell.font = { bold: true };
+      headingCell.alignment = { horizontal: 'center' };
+      headingCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ff91d2ff' } };
+      headingCell.border = {
         top: { style: 'thin' },
         left: { style: 'thin' },
         bottom: { style: 'thin' },
         right: { style: 'thin' }
       };
-    }
-
-    // Add data rows
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      const rowData = Array.from(row.querySelectorAll('td')).map(cell => cell.innerText);
-      const dataRow = worksheet.addRow(rowData);
-      dataRow.alignment = { horizontal: 'center' };
-      dataRow.eachCell(cell => {
-        cell.border = {
+    
+      const columnHeaders = Array.from(columnName.querySelectorAll('th')).map(cell => cell.innerText);
+      rowCount += 1;
+      for (let i = 0; i < numHeaderCells; i++) {
+        worksheet.getCell(2, i + 1).value = columnHeaders[i];
+        worksheet.getCell(2, i + 1).font = { bold: true };
+        worksheet.getCell(2, i + 1).alignment = { horizontal: 'center' };
+        worksheet.getCell(2, i + 1).border = {
           top: { style: 'thin' },
           left: { style: 'thin' },
           bottom: { style: 'thin' },
           right: { style: 'thin' }
         };
-      });
+      }
+    
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        rowCount += 1;
+        const rowData = Array.from(row.querySelectorAll('td')).map(cell => cell.innerText);
+        const dataRow = worksheet.addRow(rowData);
+        dataRow.alignment = { horizontal: 'center' };
+        dataRow.eachCell(cell => {
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+        });
+      }
+    
+      for (let i = 3; i <= rowCount; i++) {
+        for (let j = 1; j <= numHeaderCells; j++) {
+          const cellValue = worksheet.getCell(i, j).value;
+          if (cellValue === 'Off') {
+            worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffd9d9d9' } };
+          } else if (cellValue === 'Absent') {
+            worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffffff66' } };
+          } else if (cellValue && ((parseInt(cellValue.split(':')[0]) === 9 && parseInt(cellValue.split(':')[1]) > 0) ||
+            parseInt(cellValue.split(':')[0]) > 9 || cellValue.includes('PM'))) {
+            worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffda9694' } };
+          }
+        }
+      }
+    
+      worksheet.columns.forEach(column => column.width = 22);
+      worksheet.getColumn(1).font = { bold: true };
+    
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${empIdName} Report(${selectedMonthYear}).xlsx`;
+      document.body.appendChild(a);
+      a.click();
+    
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet(`Full Report (${selectedMonthYear})`);
+      const rows = table.querySelectorAll('tr');
+      const columnName = rows[0];
+      const numHeaderCells = columnName.querySelectorAll('th').length;
+      let rowCount = 0;
+    
+      const heading = `Employee Attendance Report for ${selectedMonthYear}`;
+      worksheet.addRow([heading]);
+      rowCount += 1;
+      worksheet.mergeCells(1, 1, 1, numHeaderCells);
+      const headingCell = worksheet.getCell(1, 1);
+      headingCell.value = heading;
+      headingCell.font = { bold: true };
+      headingCell.alignment = { horizontal: 'center' };
+      headingCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ff91d2ff' } };
+      headingCell.border = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+      };
+    
+      const columnHeaders = Array.from(columnName.querySelectorAll('th')).map(cell => cell.innerText);
+      rowCount += 1;
+      for (let i = 0; i < numHeaderCells; i++) {
+        worksheet.getCell(2, i + 1).value = columnHeaders[i];
+        worksheet.getCell(2, i + 1).font = { bold: true };
+        worksheet.getCell(2, i + 1).alignment = { horizontal: 'center' };
+        worksheet.getCell(2, i + 1).border = {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        };
+      }
+    
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        rowCount += 1;
+        const rowData = Array.from(row.querySelectorAll('td')).map(cell => cell.innerText);
+        const dataRow = worksheet.addRow(rowData);
+        dataRow.alignment = { horizontal: 'center' };
+        dataRow.eachCell(cell => {
+          cell.border = {
+            top: { style: 'thin' },
+            left: { style: 'thin' },
+            bottom: { style: 'thin' },
+            right: { style: 'thin' }
+          };
+        });
+      }
+    
+      for (let i = 3; i <= rowCount; i++) {
+        for (let j = 1; j <= numHeaderCells; j++) {
+          const cellValue = worksheet.getCell(i, j).value;
+          if (cellValue === 'Off') {
+            worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffd9d9d9' } };
+          } else if (cellValue === 'Absent') {
+            worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffffff66' } };
+          } else if (cellValue && ((parseInt(cellValue.split(':')[0]) === 9 && parseInt(cellValue.split(':')[1]) > 0) ||
+            parseInt(cellValue.split(':')[0]) > 9 || cellValue.includes('PM'))) {
+            worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffda9694' } };
+          }
+        }
+      }
+    
+      worksheet.columns.forEach(column => column.width = 22);
+      worksheet.getColumn(1).font = { bold: true };
+    
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Attendance Report(${selectedMonthYear}).xlsx`;
+      document.body.appendChild(a);
+      a.click();
+    
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     }
-
-    worksheet.columns.forEach(column => column.width = 22);
-    worksheet.getColumn(1).font = { bold: true };
-
-    // Convert the workbook to a Buffer
-    const buffer = await workbook.xlsx.writeBuffer();
-    // Create a Blob from the Buffer
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-    // Create a download link
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'Attendance.xlsx';
-    document.body.appendChild(a);
-    a.click();
-
-    // Cleanup
-    URL.revokeObjectURL(url);
-    document.body.removeChild(a);
+  
+   
   };
-
+  
 
 
   return (
@@ -300,33 +464,33 @@ const EmployeeAttendance = () => {
           <CCardHeader>
             Employee Report
           </CCardHeader>
-          <CCardBody  style={{ overflowY: 'scroll', maxHeight: '500px' }}>
+          <CCardBody style={{ overflowY: 'scroll', maxHeight: '500px' }}>
             <CRow className='mb-4'>
               <CCol xs={12} sm={12} md={3} xl={3} style={{ marginTop: '5px' }}>
-                  <CDropdown>
-                    <CDropdownToggle
-                      color="secondary" caret >
-                      {selectedMonthYear}
-                    </CDropdownToggle>
-                    <CDropdownMenu
-                      onClick={handleMonthChange} style={{ cursor: 'pointer', overflowY: 'scroll', maxHeight: '200px' }}>
-                      <CDropdownItem value="">select month</CDropdownItem>
-                      {months}
-                    </CDropdownMenu>
-                  </CDropdown>
+                <CDropdown>
+                  <CDropdownToggle
+                    color="secondary" caret >
+                    {selectedMonthYear}
+                  </CDropdownToggle>
+                  <CDropdownMenu
+                    onClick={handleMonthChange} style={{ cursor: 'pointer', overflowY: 'scroll', maxHeight: '200px' }}>
+                    <CDropdownItem value="">select month</CDropdownItem>
+                    {months}
+                  </CDropdownMenu>
+                </CDropdown>
               </CCol>
               <CCol xs={12} sm={12} md={3} xl={3} style={{ marginTop: '5px' }}>
-                  <CDropdown>
-                    <CDropdownToggle
-                      color="secondary" caret >
-                      {empIdName}
-                    </CDropdownToggle>
-                    <CDropdownMenu
-                      onClick={handleEmployeeChange} style={{ cursor: 'pointer', overflowY: 'scroll', maxHeight: '200px' }}>
-                      <CDropdownItem value="">All Employees</CDropdownItem>
-                      {employeeOptions}
-                    </CDropdownMenu>
-                  </CDropdown>
+                <CDropdown>
+                  <CDropdownToggle
+                    color="secondary" caret >
+                    {empIdName}
+                  </CDropdownToggle>
+                  <CDropdownMenu
+                    onClick={handleEmployeeChange} style={{ cursor: 'pointer', overflowY: 'scroll', maxHeight: '200px' }}>
+                    <CDropdownItem value="">All Employees</CDropdownItem>
+                    {employeeOptions}
+                  </CDropdownMenu>
+                </CDropdown>
               </CCol>
               <CCol xs={12} sm={12} md={6} xl={6} style={{ marginTop: '5px' }}>
                 <CTooltip
@@ -352,21 +516,22 @@ const EmployeeAttendance = () => {
                   <CTableRow className="bg-body-tertiary text-center">
                     {
                       dateHeaders && dateHeaders.map((headers, index) => (
-                        <CTableHeaderCell key={index}>{headers}</CTableHeaderCell>
+                        <CTableHeaderCell key={index} 
+                        style={{ minWidth: '105px' }}>{headers}</CTableHeaderCell>
                       ))
                     }
                   </CTableRow>
                 </CTableHead>
-                  <CTableBody>
+                <CTableBody>
                   {
-                    employeeData && employeeData.map((employee, rowIndex) => {
+                    processedEmployeeData && processedEmployeeData.map((employee, rowIndex) => {
                       return (
                         <CTableRow key={rowIndex}>
-                          {Object.values(employee).map((value, columnIndex) => {
-                            return <CTableDataCell key={columnIndex} style={getStyle(value, columnIndex, employeeData)}>
-                              {formatCellText(value, columnIndex, employeeData)}
+                          {employee.map((cell, columnIndex) => (
+                            <CTableDataCell key={columnIndex} style={cell.style}>
+                              {cell.text}
                             </CTableDataCell>
-                          })}
+                          ))}
                         </CTableRow>
                       );
                     })

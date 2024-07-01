@@ -107,7 +107,6 @@ const Login = () => {
                           }} />
                         <img src={logoname} alt='Company'
                           style={{
-                            backgroundColor: 'white',
                             padding: '5px', borderRadius: '5px',
                             width: '180px', height: '50px'
                           }} />

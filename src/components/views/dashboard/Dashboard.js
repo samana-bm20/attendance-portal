@@ -98,7 +98,7 @@ const Dashboard = () => {
             empid: user?.empid,
           };
           try {
-            const response = await axios.post(`${Config.apiUrl}/record`, params);
+            const response = await axios.post(`${Config.apiUrl}/intime`, params);
             if (response.data.status === 'OK') {
               if (toastId) toast.dismiss(toastId);
               toastId = toast.success("Attendance recorded successfully.", { autoClose: 3000 });
@@ -305,7 +305,7 @@ const Dashboard = () => {
       <CRow xs={{ gutter: 3 }}>
         <CCol sm={12} xl={6} xxl={6}>
           <CCard className="mb-4">
-            <CCardHeader>Upcoming Leave Requests</CCardHeader>
+            <CCardHeader>Your Upcoming Leaves</CCardHeader>
             <CCardBody style={{ overflowY: 'scroll', maxHeight: '200px', minHeight: '200px' }}>
               <CTable align="middle" className="mb-0 border" hover responsive>
                 <CTableHead className="text-nowrap">
@@ -427,7 +427,7 @@ const Dashboard = () => {
                         justifyContent: 'flex-start',
                       }}
                     >
-                      <CIcon icon={cilUser} style={{ color: 'blue' }} />
+                      <CIcon icon={cilUser} style={{ color: 'steelblue' }} />
                       <div className="p-2">
                         {record.EmpID} - {record.EmpName}
                       </div>
@@ -451,7 +451,7 @@ const Dashboard = () => {
                         justifyContent: 'flex-start',
                       }}
                     >
-                      <CIcon icon={cilBirthdayCake} style={{ color: 'blue' }} />
+                      <CIcon icon={cilBirthdayCake} style={{ color: 'steelblue' }} />
                       <div className="p-2">
                         {record.name} - {record.UpcomingBirthday}
                       </div>

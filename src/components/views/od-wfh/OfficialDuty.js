@@ -279,11 +279,10 @@ const OfficialDuty = () => {
     }
     try {
       let params = {
-        "rejectedCancel": 'Rejected',
         "Id": selectedRequest.id,
         "rejectReason": rejectReason
       }
-      const response = await axios.put(`${Config.apiUrl}/reject`, params);
+      const response = await axios.put(`${Config.apiUrl}/updateRejectForOD`, params);
       console.log(response.data);
       setShowRejectDialog(false);
       fetchOfficialDutyRequests();
@@ -317,7 +316,6 @@ const OfficialDuty = () => {
     }
     try {
       let params = {
-        "rejectedCancel": 'Pullback',
         "Id": selectedRequest.id,
         "rejectReason": rejectReason
       }

@@ -1,6 +1,6 @@
 // Inside your App component
 import React, { Suspense, useEffect, useState } from 'react';
-import { HashRouter, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import UserContextProvider from './context/UserContextProvider';
 import { useSelector, useDispatch } from "react-redux";
 import { ToastContainer, toast } from "react-toastify";
@@ -18,7 +18,6 @@ import User from './layout/User';
 
 // Pages
 const Login = React.lazy(() => import('./components/views/pages/login/Login'));
-const Register = React.lazy(() => import('./components/views/pages/register/Register'));
 
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme');
@@ -67,11 +66,11 @@ const App = () => {
   useEffect(() => {
     if (remainingIdleTime !== null) {
       // Do something with the remaining idle time
-      console.log("Remaining idle time:", remainingIdleTime);
+      console.log(remainingIdleTime);
       // Example: Display a countdown or perform an action when idle time is low
       if (remainingIdleTime <= 10000) {
         // Example action when idle time is less than or equal to 10 seconds (10,000 milliseconds)
-        console.log("Idle time is low, take action...");
+        console.log(remainingIdleTime);
       }
     }
   }, [remainingIdleTime]);
@@ -98,7 +97,6 @@ const App = () => {
         >
           <Routes>
             <Route exact path="/" name="Login Page" element={<Login />} />
-            <Route exact path="/register" name="Register Page" element={<Register />} />
           </Routes>
         </Suspense>
       </UserContextProvider>

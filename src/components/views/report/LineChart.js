@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import Config from "../../../Config";
 import { useSelector } from "react-redux";
-import { CChartLine } from '@coreui/react-chartjs';
+// import { CChartLine } from '@coreui/react-chartjs';
+import { Line } from 'react-chartjs-2';
 import axios from 'axios';
 import * as ExcelJS from 'exceljs';
 import UserContext from '../../../context/UserContext'
@@ -38,12 +39,31 @@ const LineChart = () => {
     const [isFirstLoad, setIsFirstLoad] = useState(true);
     const { months } = useContext(UserContext);
 
+    //#region Time Calculation
     const convertTimeToHours = (time) => {
         const [hours, minutes, seconds] = time.split(':').map(Number);
         return hours + minutes / 60 + seconds / 3600;
     };
 
     const numericData = YAxisData.map(convertTimeToHours);
+
+    function parseTime(timeString) {
+        const [hours, minutes, seconds] = timeString.split(':').map(Number);
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
+    }
+
+    function calculateTimeDifference(employeeTime) {
+        const start = parseTime(employeeTime);
+        const end = parseTime('08:30:00');
+
+        const diffInMilliseconds = end - start;
+        const diffInMinutes = diffInMilliseconds / 1000 / 60;
+
+        return diffInMinutes.toFixed(0);
+    }
+
+    //#endregion
 
     //#region Daily Working Hours
 
@@ -178,10 +198,13 @@ const LineChart = () => {
                 {
 
                     label: 'Working Hours',
-                    backgroundColor: ['#fff'],
-                    borderColor: 'rgba(90, 209, 255, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.3)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
                     borderWidth: 3,
                     data: numericData,
+                    pointStyle: 'circle',
+                    pointRadius: 7,
+                    pointHoverRadius: 10
                 },
             ],
         },
@@ -215,9 +238,9 @@ const LineChart = () => {
                 right: { style: 'thin' }
             };
 
-            worksheet.mergeCells('A1', 'C1');
+            worksheet.mergeCells('A1', 'D1');
             // Add column headers
-            worksheet.addRow(['Emp ID', 'Employee Name', 'Working Hours']);
+            worksheet.addRow(['Emp ID', 'Employee Name', 'Working Hours', 'Less By (in min)']);
             worksheet.getRow(2).font = { bold: true };
             worksheet.getRow(2).alignment = { horizontal: 'center' };
             worksheet.getRow(2).eachCell(cell => {
@@ -231,7 +254,7 @@ const LineChart = () => {
 
             // Add the chart data to the worksheet
             for (let i = 0; i < employeeNames.length; i++) {
-                const row = worksheet.addRow([employeeIDs[i], employeeNames[i], workingHours[i]]);
+                const row = worksheet.addRow([employeeIDs[i], employeeNames[i], workingHours[i], '-']);
                 row.alignment = { horizontal: 'center' };
                 row.eachCell(cell => {
                     cell.border = {
@@ -247,7 +270,8 @@ const LineChart = () => {
                 const [hours, minutes, seconds] = workingHours[i].split(':').map(Number);
                 const numeric = hours + minutes / 60 + seconds / 3600;
                 if (numeric < 8.5) {
-                    worksheet.getCell(`C${i+3}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffda9694' } };   
+                    worksheet.getCell(`C${i + 3}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffda9694' } };
+                    worksheet.getCell(`D${i + 3}`).value = calculateTimeDifference(workingHours[i]);
                 }
             }
 
@@ -292,9 +316,9 @@ const LineChart = () => {
                 right: { style: 'thin' }
             };
 
-            worksheet.mergeCells('A1', 'C1');
+            worksheet.mergeCells('A1', 'D1');
             // Add column headers
-            worksheet.addRow(['S.No.', 'Date', 'Working Hours']);
+            worksheet.addRow(['S.No.', 'Date', 'Working Hours', 'Less By (in min)']);
             worksheet.getRow(2).font = { bold: true };
             worksheet.getRow(2).alignment = { horizontal: 'center' };
             worksheet.getRow(2).eachCell(cell => {
@@ -308,7 +332,7 @@ const LineChart = () => {
 
             // Add the chart data to the worksheet
             for (let i = 0; i < monthDates.length; i++) {
-                const row = worksheet.addRow([i + 1, monthDates[i], workingHours[i]]);
+                const row = worksheet.addRow([i + 1, monthDates[i], workingHours[i], '-']);
                 row.alignment = { horizontal: 'center' };
                 row.eachCell(cell => {
                     cell.border = {
@@ -324,7 +348,8 @@ const LineChart = () => {
                 const [hours, minutes, seconds] = workingHours[i].split(':').map(Number);
                 const numeric = hours + minutes / 60 + seconds / 3600;
                 if (numeric < 8.5) {
-                    worksheet.getCell(`C${i+3}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffda9694' } };   
+                    worksheet.getCell(`C${i + 3}`).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffda9694' } };
+                    worksheet.getCell(`D${i + 3}`).value = calculateTimeDifference(workingHours[i]);
                 }
             }
 
@@ -402,14 +427,14 @@ const LineChart = () => {
                                     <CButton
                                         align="middle"
                                         color="success"
-                                        style={{ marginTop: '10px'}}
+                                        style={{ marginTop: '10px' }}
                                         onClick={downloadLineChartAsXLSX}>Export</CButton>
                                 </CTooltip>
                                 </CCol>
                             </CRow>
                         </CCardHeader>
-                        <CCardBody style={{ maxHeight: '26rem' }}>
-                            <CChartLine
+                        <CCardBody>
+                            <Line
                                 style={{ maxHeight: '25rem' }}
                                 data={chartData.data}
                                 options={chartData.options}

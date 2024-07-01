@@ -421,7 +421,6 @@ const LeavePage = () => {
 
     try {
       let params = {
-        "EmpID": user?.empid,
         "Id": selectedRequest.id,
         "Reason": approveReason,
       }

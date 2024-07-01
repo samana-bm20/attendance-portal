@@ -180,9 +180,9 @@ const Monthly = () => {
         }
 
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet(`${user?.empid}-${user?.name}`);
+        const worksheet = workbook.addWorksheet(`Attendance-(${user?.name})`);
 
-        const heading = `Attendance Report - ${selectedMonthYear}`;
+        const heading = `${user?.empid}-${user?.name} Attendance Report-${selectedMonthYear}`;
         worksheet.addRow([heading]);
         worksheet.mergeCells('A1', `E1`);
         worksheet.getCell('A1').value = heading;
@@ -236,7 +236,7 @@ const Monthly = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'Attendance.xlsx';
+        a.download = `${user?.empid}-Attendance (${selectedMonthYear}).xlsx`;
         document.body.appendChild(a);
         a.click();
 

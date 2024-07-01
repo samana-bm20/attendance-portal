@@ -2,7 +2,11 @@ import React, { useEffect, useState } from 'react'
 import Config from "../../../Config";
 import { useSelector } from "react-redux";
 import { CChartDoughnut } from '@coreui/react-chartjs'
+import { Doughnut } from 'react-chartjs-2';
 import axios from 'axios'
+import { Chart as ChartJS, registerables } from 'chart.js';
+import 'chart.js/auto';
+ChartJS.register(...registerables);
 
 import {
   CCard,
@@ -84,9 +88,11 @@ const MainChart = () => {
       ],
     },
     options: {
+      responsive: true,
       aspectRatio: 1.5,
-      cutout: 50,
+      cutout: 30,
       borderWidth: 1,
+      borderColor: '#c0c0c0',
       maintainAspectRatio: true,
     }
   }
@@ -103,8 +109,9 @@ const MainChart = () => {
     },
     options: {
       aspectRatio: 1.5,
-      cutout: 40,
+      cutout: 20,
       borderWidth: 1,
+      borderColor: '#c0c0c0',
       maintainAspectRatio: true,
     }
   }
@@ -121,8 +128,9 @@ const MainChart = () => {
     },
     options: {
       aspectRatio: 1.5,
-      cutout: 40,
+      cutout: 20,
       borderWidth: 1,
+      borderColor: '#c0c0c0',
       maintainAspectRatio: true,
     }
   }
@@ -139,8 +147,9 @@ const MainChart = () => {
     },
     options: {
       aspectRatio: 1.5,
-      cutout: 50,
+      cutout: 30,
       borderWidth: 1,
+      borderColor: '#c0c0c0',
       maintainAspectRatio: true,
     }
   }
@@ -154,7 +163,7 @@ const MainChart = () => {
               <h6>Working Days</h6>
             </CCardHeader>
             <CCardBody>
-              <CChartDoughnut
+              <Doughnut
                 data={chart1Data.data}
                 options={chart1Data.options}
               />
@@ -173,7 +182,7 @@ const MainChart = () => {
               <h6>Monthly Log</h6>
             </CCardHeader>
             <CCardBody>
-              <CChartDoughnut
+              <Doughnut
                 data={chart2Data.data}
                 options={chart2Data.options}
               />
@@ -193,7 +202,7 @@ const MainChart = () => {
               <h6>Leave Requests</h6>
             </CCardHeader>
             <CCardBody>
-              <CChartDoughnut
+              <Doughnut
                 data={chart3Data.data}
                 options={chart3Data.options}
               />
@@ -213,7 +222,7 @@ const MainChart = () => {
               <h6>Leaves</h6>
             </CCardHeader>
             <CCardBody>
-              <CChartDoughnut
+              <Doughnut
                 data={chart4Data.data}
                 options={chart4Data.options}
               />
