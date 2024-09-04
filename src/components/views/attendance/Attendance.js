@@ -76,7 +76,7 @@ const Attendance = () => {
           startDate = formatDate(viewDate);
           endDate = formatDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0));
         }
-
+debugger
         const response = await axios.get(`${Config.apiUrl}/calendar?username=${user?.username}&startDate=${startDate}&endDate=${endDate}`);
         const updatedCalendarData = await Promise.all(response.data.data.map(async (record) => {
           if ((record.time === null) && (new Date(record.date) <= new Date())) {

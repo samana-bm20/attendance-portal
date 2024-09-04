@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { CContainer, CSpinner } from '@coreui/react'
 
 // routes config 
+
 import admin from './routes/admin'
 
 const AdminAppContent = () => {

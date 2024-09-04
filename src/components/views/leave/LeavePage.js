@@ -29,7 +29,7 @@ import {
   CDropdownToggle,
   CDropdownMenu,
   CDropdownItem,
-  CBadge,
+  CFormSwitch,
 } from '@coreui/react'
 import {
   cilTrash,
@@ -75,9 +75,17 @@ const LeavePage = () => {
   const [empIdName, setEmpIdName] = useState('All Employees');
   const [employeeID, setEmployeeID] = useState('');
   const [employeeOptions, setEmployeeOptions] = useState([]);
+  const [switchEnabled, setSwitchEnabled] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   let toastId = null;
 
+  const currentTableData = useMemo(() => {
+    const firstPageIndex = (currentPage - 1) * PageSize;
+    const lastPageIndex = firstPageIndex + PageSize;
+    return leaveRequests.slice(firstPageIndex, lastPageIndex);
+  }, [leaveRequests, currentPage]);
+
+  //#region Fetch Leave Req
   const fetchLeaveRequests = async (page) => {
     try {
       if ((user?.userType == 1 && empIdName == 'All Employees') ||
@@ -110,6 +118,7 @@ const LeavePage = () => {
     fetchLeaveRequests(currentPage);
   }, [currentPage, empIdName, employeeID, setPendingLeave]);
 
+  //#region Set EmpIDName
   useEffect(() => {
     const setEmpIdName = async () => {
       try {
@@ -135,12 +144,7 @@ const LeavePage = () => {
     }
   };
 
-  const currentTableData = useMemo(() => {
-    const firstPageIndex = (currentPage - 1) * PageSize;
-    const lastPageIndex = firstPageIndex + PageSize;
-    return leaveRequests.slice(firstPageIndex, lastPageIndex);
-  }, [leaveRequests, currentPage]);
-
+  //#region Add Leave
   const calculateDays = (start, end, count) => {
     if (start && end) {
       const startDt = new Date(start);
@@ -150,8 +154,6 @@ const LeavePage = () => {
       return diffDays + count;
     }
   };
-
-  //#region Add Leave
 
   const openModal = () => {
     setShowAddDialog(true);
@@ -177,12 +179,55 @@ const LeavePage = () => {
     setReason(event.target.value);
   });
 
+  const checkSaturday = (startDate, endDate) => {
+    let start = new Date(startDate);
+    let end = new Date(endDate);
+
+    while (start <= end) {
+      let day = start.getDay();
+      let date = start.getDate();
+
+      if (day === 6 && Math.ceil(date / 7) % 2 === 0) {
+        return 1;
+      }
+
+      start.setDate(start.getDate() + 1);
+    }
+
+    return 0;
+  }
+
+  const checkFifthSaturday = (startDate, endDate) => {
+    let start = new Date(startDate);
+    let end = new Date(endDate);
+    const currentYear = start.getFullYear();
+    const currentMonth = start.getMonth() + 1;
+
+    const storageKey = `fifthSaturday_${currentYear}_${currentMonth}`;
+
+    if(localStorage.getItem(storageKey) == 'true') {
+      let saturdayCount = 0;
+      while (start <= end) {
+        if (start.getDay() === 6) { 
+          saturdayCount++;
+        }
+    
+        if (saturdayCount === 5) {
+          return 0; 
+        }
+        start.setDate(start.getDate() + 1);
+      }
+    } else {
+      return 1;
+    }
+  }
+
   const checkSunday = (fromDate, toDate) => {
     let startDate = new Date(fromDate);
     let endDate = new Date(toDate);
 
     while (startDate <= endDate) {
-      if (startDate.getDay() === 0) {   //Sunday
+      if (startDate.getDay() === 0) {  
         return 1;
       }
       startDate.setDate(startDate.getDate() + 1);
@@ -207,10 +252,22 @@ const LeavePage = () => {
         toastId = toast.info("Please enter reason.", { autoClose: 3000 });
         return;
       }
+      if (checkSaturday(startDate, endDate) == 1) {
+        if (toastId) toast.dismiss(toastId);
+        toastId = toast.info("Cannot include even Saturdays.", { autoClose: 3000 });
+        return;
+      }
       if (checkSunday(startDate, endDate) == 1) {
         if (toastId) toast.dismiss(toastId);
         toastId = toast.info("Cannot include Sunday.", { autoClose: 3000 });
         return;
+      }
+      if(hasFifthSaturday(new Date(startDate).getFullYear(), new Date(startDate).getMonth() + 1)){
+        if (checkFifthSaturday(startDate, endDate) == 1) {
+          if (toastId) toast.dismiss(toastId);
+          toastId = toast.info("Cannot include Off 5th Saturday.", { autoClose: 3000 });
+          return;
+        }
       }
 
       let firstHalf = 'No';
@@ -561,6 +618,49 @@ const LeavePage = () => {
   }
   //#end region
 
+  
+  //#region 5th Saturday
+  const hasFifthSaturday = (year, month) => {
+    let saturdayCount = 0;
+
+    for (let day = 1; day <= 31; day++) {
+      const date = new Date(year, month - 1, day);
+      if (date.getMonth() + 1 !== month) break;
+      if (date.getDay() === 6) saturdayCount++;
+
+      if (saturdayCount === 5) return true;
+    }
+    return false;
+  };
+
+  useEffect(() => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+
+    const storageKey = `fifthSaturday_${currentYear}_${currentMonth}`;
+
+    if (hasFifthSaturday(currentYear, currentMonth)) {
+      const savedState = localStorage.getItem(storageKey);
+      if (savedState !== null) {
+        setSwitchEnabled(JSON.parse(savedState));
+      } else {
+        setSwitchEnabled(false);
+      }
+    }
+  }, []);
+
+  const handleSwitchChange = () => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+
+    const storageKey = `fifthSaturday_${currentYear}_${currentMonth}`;
+    
+    setSwitchEnabled(!switchEnabled);
+    localStorage.setItem(storageKey, JSON.stringify(!switchEnabled));
+  };
+
   return (
     <UserContextProvider>
       <CRow xs={{ gutter: 3 }}>
@@ -588,20 +688,33 @@ const LeavePage = () => {
                 </CCol>
                 <CCol xs={12} sm={6} md={6} xl={6}
                   style={{ display: 'flex', flexDirection: 'row-reverse' }}>
-                  <div className="leave-status">
+                  <div className="leave-status"
+                    style={{ display: 'flex', alignItems: 'center' }}>
+
                     {user?.userType == 1 && (
-                      <CTooltip
-                        content="Add late leave"
-                        trigger={['hover']}
-                      >
-                        <CButton
-                          color="primary"
-                          type="button"
-                          className="reject-btn mb-2 mx-2"
-                          onClick={openLateModal}>
-                          Late Leave
-                        </CButton>
-                      </CTooltip>
+                      <>
+                      {hasFifthSaturday(new Date().getFullYear(), new Date().getMonth() + 1) && (
+                        <CFormSwitch 
+                        style={{ marginLeft: '5px' }} 
+                        reverse id="fifthSaturday" 
+                        label="5th Saturday" 
+                        checked={switchEnabled}
+                        onChange={handleSwitchChange}
+                        />
+                      )}
+                        <CTooltip
+                          content="Add late leave"
+                          trigger={['hover']}
+                        >
+                          <CButton
+                            color="primary"
+                            type="button"
+                            className="reject-btn mb-2 mx-2"
+                            onClick={openLateModal}>
+                            Late Leave
+                          </CButton>
+                        </CTooltip>
+                      </>
                     )}
                     <CTooltip
                       content="Apply leave"

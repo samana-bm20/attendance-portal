@@ -64,12 +64,25 @@ const OfficialDuty = () => {
   const [employeeOptions, setEmployeeOptions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [showPullback, setShowPullback] = useState(false);
+  const [holidays, setHolidays] = useState([]);
   let toastId = null;
+
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      try {
+        const response = await axios.get(`${Config.apiUrl}/getHolidayList`);
+        setHolidays(response.data.data);
+      } catch (error) {
+        console.error('Error fetching holidays', error);
+      }
+    };
+    fetchHolidays();
+  }, []);
 
   const fetchOfficialDutyRequests = async (page) => {
     try {
-      if ((user?.userType == 1 && empIdName == 'All Employees') || 
-           user?.userType == 2 || user?.userType == 3) {
+      if ((user?.userType == 1 && empIdName == 'All Employees') ||
+        user?.userType == 2 || user?.userType == 3) {
         const response = await axios.get(`${Config.apiUrl}/pendingOfficialDuty`, {
           params: {
             userType: user?.userType,
@@ -160,17 +173,96 @@ const OfficialDuty = () => {
     setReason(event.target.value);
   });
 
+  const checkHoliday = (startDate, endDate) => {
+    let start = new Date(startDate);
+    let end = new Date(endDate);
+
+    while (start <= end) {
+
+      const formattedDate = start.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }).replace(/ /g, '-');
+
+      if (holidays.some(holiday => holiday.Date === formattedDate)) {
+        return 1;
+      }
+
+      start.setDate(start.getDate() + 1);
+    }
+
+    return 0;
+  };
+
+  const checkSaturday = (startDate, endDate) => {
+    let start = new Date(startDate);
+    let end = new Date(endDate);
+
+    while (start <= end) {
+      let day = start.getDay();
+      let date = start.getDate();
+
+      if (day === 6 && Math.ceil(date / 7) % 2 === 0) {
+        return 1;
+      }
+
+      start.setDate(start.getDate() + 1);
+    }
+
+    return 0;
+  }
+
   const checkSunday = (fromDate, toDate) => {
     let startDate = new Date(fromDate);
     let endDate = new Date(toDate);
 
     while (startDate <= endDate) {
-      if (startDate.getDay() === 0) {   //Sunday
+      if (startDate.getDay() === 0) {
         return 1;
       }
       startDate.setDate(startDate.getDate() + 1);
     }
     return 0;
+  }
+
+  //#region 5th Saturday
+  const hasFifthSaturday = (year, month) => {
+    let saturdayCount = 0;
+
+    for (let day = 1; day <= 31; day++) {
+      const date = new Date(year, month - 1, day);
+      if (date.getMonth() + 1 !== month) break;
+      if (date.getDay() === 6) saturdayCount++;
+
+      if (saturdayCount === 5) return true;
+    }
+    return false;
+  };
+
+  const checkFifthSaturday = (startDate, endDate) => {
+    let start = new Date(startDate);
+    let end = new Date(endDate);
+    const currentYear = start.getFullYear();
+    const currentMonth = start.getMonth() + 1;
+
+    const storageKey = `fifthSaturday_${currentYear}_${currentMonth}`;
+
+    if (localStorage.getItem(storageKey) == 'true') {
+      let saturdayCount = 0;
+      while (start <= end) {
+        if (start.getDay() === 6) {
+          saturdayCount++;
+        }
+
+        if (saturdayCount === 5) {
+          return 0;
+        }
+        start.setDate(start.getDate() + 1);
+      }
+    } else {
+      return 1;
+    }
   }
 
   const handleAdd = async () => {
@@ -195,10 +287,27 @@ const OfficialDuty = () => {
         toastId = toast.info("Please select OD or WFH mode.", { autoClose: 3000 });
         return;
       }
+      if (checkHoliday(startDate, endDate) == 1) {
+        if (toastId) toast.dismiss(toastId);
+        toastId = toast.info("Cannot include Holidays.", { autoClose: 3000 });
+        return;
+      }
+      if (checkSaturday(startDate, endDate) == 1) {
+        if (toastId) toast.dismiss(toastId);
+        toastId = toast.info("Cannot include even Saturdays.", { autoClose: 3000 });
+        return;
+      }
       if (checkSunday(startDate, endDate) == 1) {
         if (toastId) toast.dismiss(toastId);
         toastId = toast.info("Cannot include Sunday.", { autoClose: 3000 });
         return;
+      }
+      if (hasFifthSaturday(new Date(startDate).getFullYear(), new Date(startDate).getMonth() + 1)) {
+        if (checkFifthSaturday(startDate, endDate) == 1) {
+          if (toastId) toast.dismiss(toastId);
+          toastId = toast.info("Cannot include Off 5th Saturday.", { autoClose: 3000 });
+          return;
+        }
       }
 
       const params = {
@@ -253,7 +362,7 @@ const OfficialDuty = () => {
       let params = {
         "EmpID": user?.empid,
         "Id": selectedRequest.id,
-        "Reason": approveReason+` (By- ${user?.name})`,
+        "Reason": approveReason + ` (By- ${user?.name})`,
       }
       const response = await axios.put(`${Config.apiUrl}/updateApproveForOD`, params);
       console.log(response.data);
@@ -302,7 +411,7 @@ const OfficialDuty = () => {
     try {
       let params = {
         "Id": selectedRequest.id,
-        "rejectReason": rejectReason+` (By- ${user?.name})`
+        "rejectReason": rejectReason + ` (By- ${user?.name})`
       }
       const response = await axios.put(`${Config.apiUrl}/updateRejectForOD`, params);
       console.log(response.data);
@@ -362,7 +471,7 @@ const OfficialDuty = () => {
   //#endregion
   return (
     <UserContextProvider>
-      <CRow  xs={{ gutter: 3 }}>
+      <CRow xs={{ gutter: 3 }}>
         <CCol>
           <CCard style={{ marginBottom: '10px' }}>
             <CCardHeader>
@@ -384,7 +493,7 @@ const OfficialDuty = () => {
                   )}
                 </CCol>
                 <CCol xs={12} sm={6} md={6} xl={6}
-                style={{ display: 'flex', flexDirection: 'row-reverse' }}>
+                  style={{ display: 'flex', flexDirection: 'row-reverse' }}>
                   <div className="leave-status">
                     <CTooltip
                       content="Apply for OD/WFH"
