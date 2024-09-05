@@ -200,25 +200,32 @@ const LeavePage = () => {
   const checkFifthSaturday = (startDate, endDate) => {
     let start = new Date(startDate);
     let end = new Date(endDate);
-    const currentYear = start.getFullYear();
-    const currentMonth = start.getMonth() + 1;
+    const year = start.getFullYear();
+    const month = start.getMonth() + 1;
+    const storageKey = `fifthSaturday_${year}_${month}`;
+    let fifthSaturday = null;
+    let saturdayCount = 0;
+    let date = new Date(year, month - 1, 1);
 
-    const storageKey = `fifthSaturday_${currentYear}_${currentMonth}`;
+    while (date.getMonth() === month - 1) {
+      if (date.getDay() === 6) {
+        saturdayCount++;
+      }
+      if (saturdayCount === 5) {
+        fifthSaturday = new Date(date);
+        break;
+      }
+      date.setDate(date.getDate() + 1);
+    }
 
-    if(localStorage.getItem(storageKey) == 'true') {
-      let saturdayCount = 0;
-      while (start <= end) {
-        if (start.getDay() === 6) { 
-          saturdayCount++;
-        }
-    
-        if (saturdayCount === 5) {
-          return 0; 
-        }
-        start.setDate(start.getDate() + 1);
+    if (fifthSaturday && fifthSaturday >= start && fifthSaturday <= end) {
+      if (localStorage.getItem(storageKey) == 'true') {
+        return 0;
+      } else {
+        return 1;
       }
     } else {
-      return 1;
+      return 0;
     }
   }
 
@@ -234,6 +241,28 @@ const LeavePage = () => {
     }
     return 0;
   }
+
+  const checkDateOverlap = (empid, fromDate, toDate) => {
+    const startDate = new Date(fromDate);
+    const endDate = new Date(toDate);
+    for (let leave of leaveRequests) {
+      if (leave.EmpID === empid && (leave.Status === 'Approved' || leave.Status === 'Pending')) {
+        const leaveStartDate = new Date(leave.fromDate);
+        const leaveEndDate = new Date(leave.toDate);
+
+        if (
+          (leaveStartDate <= startDate && leaveEndDate >= startDate) || // Case 1: Existing leave overlaps the start date
+          (leaveStartDate <= endDate && leaveEndDate >= endDate) ||     // Case 2: Existing leave overlaps the end date
+          (leaveStartDate >= startDate && leaveEndDate <= endDate)      // Case 3: Existing leave is completely within the new range
+        ) {
+          return 1;
+        }
+      }
+    }
+
+    return 0;
+  };
+
 
   const handleAdd = async () => {
     try {
@@ -255,6 +284,11 @@ const LeavePage = () => {
       if (checkSaturday(startDate, endDate) == 1) {
         if (toastId) toast.dismiss(toastId);
         toastId = toast.info("Cannot include even Saturdays.", { autoClose: 3000 });
+        return;
+      }
+      if (checkDateOverlap(user?.empid, startDate, endDate) == 1) {
+        if (toastId) toast.dismiss(toastId);
+        toastId = toast.info("Range includes date(s) that have already been applied.", { autoClose: 3000 });
         return;
       }
       if (checkSunday(startDate, endDate) == 1) {

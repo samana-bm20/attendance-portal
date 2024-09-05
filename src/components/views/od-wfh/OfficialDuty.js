@@ -195,6 +195,28 @@ const OfficialDuty = () => {
     return 0;
   };
 
+  const checkDateOverlap = (empid, fromDate, toDate) => {
+    const startDate = new Date(fromDate);
+    const endDate = new Date(toDate);
+    debugger
+    for (let duty of officialDuty) {
+      if (duty.EmpID === empid && (duty.Status === 'Approved' || duty.Status === 'Pending')) {
+        const dutyStartDate = new Date(duty.fromDate);
+        const dutyEndDate = new Date(duty.toDate);
+
+        if (
+          (dutyStartDate <= startDate && dutyEndDate >= startDate) || // Case 1: Existing duty overlaps the start date
+          (dutyStartDate <= endDate && dutyEndDate >= endDate) ||     // Case 2: Existing duty overlaps the end date
+          (dutyStartDate >= startDate && dutyEndDate <= endDate)      // Case 3: Existing duty is completely within the new range
+        ) {
+          return 1;
+        }
+      }
+    }
+
+    return 0;
+  };
+
   const checkSaturday = (startDate, endDate) => {
     let start = new Date(startDate);
     let end = new Date(endDate);
@@ -243,25 +265,32 @@ const OfficialDuty = () => {
   const checkFifthSaturday = (startDate, endDate) => {
     let start = new Date(startDate);
     let end = new Date(endDate);
-    const currentYear = start.getFullYear();
-    const currentMonth = start.getMonth() + 1;
+    const year = start.getFullYear();
+    const month = start.getMonth() + 1;
+    const storageKey = `fifthSaturday_${year}_${month}`;
+    let fifthSaturday = null;
+    let saturdayCount = 0;
+    let date = new Date(year, month - 1, 1);
 
-    const storageKey = `fifthSaturday_${currentYear}_${currentMonth}`;
+    while (date.getMonth() === month - 1) {
+      if (date.getDay() === 6) {
+        saturdayCount++;
+      }
+      if (saturdayCount === 5) {
+        fifthSaturday = new Date(date);
+        break;
+      }
+      date.setDate(date.getDate() + 1);
+    }
 
-    if (localStorage.getItem(storageKey) == 'true') {
-      let saturdayCount = 0;
-      while (start <= end) {
-        if (start.getDay() === 6) {
-          saturdayCount++;
-        }
-
-        if (saturdayCount === 5) {
-          return 0;
-        }
-        start.setDate(start.getDate() + 1);
+    if (fifthSaturday && fifthSaturday >= start && fifthSaturday <= end) {
+      if (localStorage.getItem(storageKey) == 'true') {
+        return 0;
+      } else {
+        return 1;
       }
     } else {
-      return 1;
+      return 0;
     }
   }
 
@@ -290,6 +319,11 @@ const OfficialDuty = () => {
       if (checkHoliday(startDate, endDate) == 1) {
         if (toastId) toast.dismiss(toastId);
         toastId = toast.info("Cannot include Holidays.", { autoClose: 3000 });
+        return;
+      }
+      if (checkDateOverlap(user?.empid, startDate, endDate) == 1) {
+        if (toastId) toast.dismiss(toastId);
+        toastId = toast.info("Range includes date(s) that have already been applied.", { autoClose: 3000 });
         return;
       }
       if (checkSaturday(startDate, endDate) == 1) {
