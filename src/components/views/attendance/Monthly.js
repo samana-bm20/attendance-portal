@@ -63,12 +63,33 @@ const Monthly = () => {
         }
     };
 
+    // const updatedAttendanceLeaveData = (attendanceRecord, leaveRecord) => {
+    //     debugger
+    //     return attendanceRecord.map((record) => {
+    //         const leaves = leaveRecord.find((leave) => record.date >= leave.FromDate && record.date <= leave.ToDate);
+    //         if (leaves) {
+    //             return { ...record, time: leaves.Status === 'Approved' ? 'Leave' : leaves.Status };
+    //         }
+    //         return record;
+    //     });
+    // };
+
     const updatedAttendanceLeaveData = (attendanceRecord, leaveRecord) => {
+        debugger
         return attendanceRecord.map((record) => {
-            const leaves = leaveRecord.find((leave) => record.date >= leave.FromDate && record.date <= leave.ToDate);
-            if (leaves) {
-                return { ...record, time: leaves.Status === 'Approved' ? 'Leave' : leaves.Status };
+            const leave = leaveRecord.find((leave) => record.date >= leave.FromDate && record.date <= leave.ToDate);
+            
+            if (leave && leave.Status == 'Approved') {
+
+                if (leave.SecondHalf === 1 && record.date == leave.FromDate) {
+                    return record;
+                } else if (leave.FirstHalf === 1 && record.date == leave.ToDate) {
+                    return record;
+                } else {
+                    return { ...record, time: 'Leave' };
+                }
             }
+
             return record;
         });
     };
@@ -133,7 +154,7 @@ const Monthly = () => {
 
                     const startDate = new Date(ReportYear, ReportMonth - 1, 1);
                     const endDate = new Date(ReportYear, ReportMonth, 0);
-                    const record = await axios.get(`${Config.apiUrl}/fetch?empname=${user?.name}&startDate=${formatDate(startDate)}&endDate=${formatDate(endDate)}`);
+                    const record = await axios.get(`${Config.apiUrl}/fetch?empid=${user?.empid}&startDate=${formatDate(startDate)}&endDate=${formatDate(endDate)}`);
 
                     const attendanceWithLeave = await updatedAttendanceLeaveData(updatedAttendanceData, (record.data.data));
                     setAttendanceData(attendanceWithLeave);

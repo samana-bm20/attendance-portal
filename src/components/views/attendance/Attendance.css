@@ -108,82 +108,82 @@
 
   .react-calendar .react-calendar__tile[class*='holiday'] {
     background-color: #d981d9 !important;
-    border: #000 solid 0.5px;
+    /* border: #000 solid 0.5px; */
   }
 
   .react-calendar .react-calendar__tile[class*='approved'] {
     background-color: lightskyblue !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
 
   .react-calendar .react-calendar__tile[class*='firsthalf'] {
     background: linear-gradient(to right, #87cefa 50%, transparent 50%) !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
 
   .react-calendar .react-calendar__tile[class*='firstPresent'] {
     background: linear-gradient(to right, #87cefa 50%, #90ee90 50%) !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
 
   .react-calendar .react-calendar__tile[class*='firstAbsent'] {
     background: linear-gradient(to right, #87cefa 50%, #ffe869 50%) !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
   
   .react-calendar .react-calendar__tile[class*='firstOff'] {
     background: linear-gradient(to right, #87cefa 50%, lightgray 50%) !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
 
   .react-calendar .react-calendar__tile[class*='secondhalf'] {
     background: linear-gradient(to right, transparent 50%, #87cefa 50%) !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
 
   .react-calendar .react-calendar__tile[class*='secondPresent'] {
     background: linear-gradient(to right, #90ee90 50%, #87cefa 50%) !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
 
   .react-calendar .react-calendar__tile[class*='secondAbsent'] {
     background: linear-gradient(to right, #ffe869 50%, #87cefa 50%) !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
   
   .react-calendar .react-calendar__tile[class*='secondOff'] {
     background: linear-gradient(to right, lightgray 50%, #87cefa 50%) !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
 
   .react-calendar .react-calendar__tile[class*='present'] {
     background-color: lightgreen !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
 
   .react-calendar .react-calendar__tile[class*='absent'] {
     background-color: #ffe869 !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
 
   .react-calendar .react-calendar__tile[class*='off'] {
     background-color: lightgray !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
 
   .react-calendar .react-calendar__tile[class*='late'] {
     background-color: lightcoral !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
  
   .react-calendar .react-calendar__tile[class*='official-duty'] {
     background-color: #36ad8f !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
 
   .react-calendar .react-calendar__tile[class*='work-from-home'] {
     background-color: #C08B5C !important;
-    border: #fff solid 0.5px;
+    /* border: #fff solid 0.5px; */
   }
 
   .react-calendar__year-view .react-calendar__tile,

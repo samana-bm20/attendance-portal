@@ -47,7 +47,7 @@ const changeState = (state = initialState, { type, ...rest }) => {
                 user: null,
             };
             sessionStorage.removeItem("user");
-            window.location.href = "/hrms-mlinfomap";
+            window.location.href = "/hrms";
             return removeUserState;
 
         case "set":

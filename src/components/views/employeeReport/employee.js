@@ -240,9 +240,9 @@ const EmployeeAttendance = () => {
   const getStyle = async (cell, columnIndex, employeeData, header) => {
     const defaultStyles = { backgroundColor: '', color: '', minWidth: '105px' };
 
-    if (cell == 'Leave' || cell == 'First Half Leave' || cell == 'Second Half Leave') {
-      return { ...defaultStyles, backgroundColor: '#25bdf5', color: 'black' }; 
-    } else if (cell == 'OD') {
+    if (cell == 'Leave' || cell == 'Absent - FHL' || cell == 'SHL - Absent') {
+      return { ...defaultStyles, backgroundColor: '#25bdf5', color: 'black' };
+    } else if (cell == 'OD' || cell == 'First-Half OD' || cell == 'Second-Half OD') {
       return { ...defaultStyles, backgroundColor: '#34a84d', color: 'black' };
     } else if (cell == 'WFH') {
       return { ...defaultStyles, backgroundColor: '#C08B5C', color: 'black' };
@@ -254,7 +254,7 @@ const EmployeeAttendance = () => {
         const datePart = header.split(' ')[0];
         try {
           const response = await axios.get(`${Config.apiUrl}/absent?date=${datePart}`);
-          const result = response.data.data; // Assuming the API response is a single integer
+          const result = response.data.data;
 
           if (result == 1) {
             return { ...defaultStyles, backgroundColor: 'grey', color: 'black' };
@@ -266,9 +266,15 @@ const EmployeeAttendance = () => {
           return defaultStyles;
         }
       } else {
-        if ((parseInt(cell.split(':')[0]) === 9 && parseInt(cell.split(':')[1]) > 0) ||
-          parseInt(cell.split(':')[0]) > 9 || cell.includes('PM')) {
-          return { ...defaultStyles, backgroundColor: 'red', color: 'white' };
+        if (!cell.includes('SHL') && !cell.includes('FHL') && !cell.includes('SH(OD)') && !cell.includes('FH(OD)')) {
+          if ((parseInt(cell.split(':')[0]) === 9 && parseInt(cell.split(':')[1]) > 0) ||
+            parseInt(cell.split(':')[0]) > 9 || cell.includes('PM')) {
+            return { ...defaultStyles, backgroundColor: 'red', color: 'white' };
+          }
+        } else if (cell.includes('FHL') || cell.includes('SHL')) {
+          return { ...defaultStyles, backgroundColor: '#25bdf5', color: 'black' };
+        } else if (cell.includes('FH(OD)') || cell.includes('SH(OD)')) {
+          return { ...defaultStyles, backgroundColor: '#34a84d', color: 'black' };
         }
       }
     } else {
@@ -283,9 +289,15 @@ const EmployeeAttendance = () => {
       } else if (!cell || cell === null) {
         return { ...defaultStyles, backgroundColor: 'gold', color: 'black' };
       } else {
-        if ((parseInt(cell.split(':')[0]) === 9 && parseInt(cell.split(':')[1]) > 0) ||
-          parseInt(cell.split(':')[0]) > 9 || cell.includes('PM')) {
-          return { ...defaultStyles, backgroundColor: 'red', color: 'white' };
+        if (!cell.includes('SHL') && !cell.includes('FHL') && !cell.includes('SH(OD)') && !cell.includes('FH(OD)')) {
+          if ((parseInt(cell.split(':')[0]) === 9 && parseInt(cell.split(':')[1]) > 0) ||
+            parseInt(cell.split(':')[0]) > 9 || cell.includes('PM')) {
+            return { ...defaultStyles, backgroundColor: 'red', color: 'white' };
+          }
+        } else if (cell.includes('FHL') || cell.includes('SHL')) {
+          return { ...defaultStyles, backgroundColor: '#25bdf5', color: 'black' };
+        } else if (cell.includes('FH(OD)') || cell.includes('SH(OD)')) {
+          return { ...defaultStyles, backgroundColor: '#34a84d', color: 'black' };
         }
       }
     }
@@ -308,7 +320,7 @@ const EmployeeAttendance = () => {
       const columnName = rows[0];
       const numHeaderCells = columnName.querySelectorAll('th').length;
       let rowCount = 0;
-    
+
       const heading = `${empIdName} Attendance Report for ${selectedMonthYear}`;
       worksheet.addRow([heading]);
       rowCount += 1;
@@ -324,7 +336,7 @@ const EmployeeAttendance = () => {
         bottom: { style: 'thin' },
         right: { style: 'thin' }
       };
-    
+
       const columnHeaders = Array.from(columnName.querySelectorAll('th')).map(cell => cell.innerText);
       rowCount += 1;
       for (let i = 0; i < numHeaderCells; i++) {
@@ -338,7 +350,7 @@ const EmployeeAttendance = () => {
           right: { style: 'thin' }
         };
       }
-    
+
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
         rowCount += 1;
@@ -354,13 +366,13 @@ const EmployeeAttendance = () => {
           };
         });
       }
-    
+
       for (let i = 3; i <= rowCount; i++) {
         for (let j = 1; j <= numHeaderCells; j++) {
           const cellValue = worksheet.getCell(i, j).value;
-          if (cellValue == 'Leave' || cellValue == 'First Half Leave' || cellValue == 'Second Half Leave') {
+          if (cellValue == 'Leave' || cellValue == 'Absent - FHL' || cellValue == 'SHL - Absent') {
             worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ff87cefa' } };
-          } else if (cellValue === 'OD') {
+          } else if (cellValue === 'OD' || cellValue == 'First-Half OD' || cellValue == 'Second-Half OD') {
             worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ff90ee90' } };
           } else if (cellValue === 'WFH') {
             worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffc08b5c' } };
@@ -368,26 +380,34 @@ const EmployeeAttendance = () => {
             worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffd9d9d9' } };
           } else if (cellValue === 'Absent') {
             worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffffff66' } };
-          } else if (cellValue && ((parseInt(cellValue.split(':')[0]) === 9 && parseInt(cellValue.split(':')[1]) > 0) ||
-            parseInt(cellValue.split(':')[0]) > 9 || cellValue.includes('PM'))) {
-            worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffda9694' } };
+          } else {
+            if (!cellValue.includes('SHL') && !cellValue.includes('FHL') && !cellValue.includes('SH(OD)') && !cellValue.includes('FH(OD)')) {
+              if (cellValue && ((parseInt(cellValue.split(':')[0]) === 9 && parseInt(cellValue.split(':')[1]) > 0) ||
+                parseInt(cellValue.split(':')[0]) > 9 || cellValue.includes('PM'))) {
+                worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffda9694' } };
+              }
+            } else if (cellValue.includes('SHL') || cellValue.includes('FHL')) {
+              worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ff87cefa' } };
+            } else if (cellValue.includes('SH(OD)') || cellValue.includes('FH(OD)')) {
+              worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ff90ee90' } };
+            }
           }
         }
       }
-    
+
       worksheet.columns.forEach(column => column.width = 22);
       worksheet.getColumn(1).font = { bold: true };
-    
+
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `${empIdName} Report(${selectedMonthYear}).xlsx`;
       document.body.appendChild(a);
       a.click();
-    
+
       URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
@@ -397,7 +417,7 @@ const EmployeeAttendance = () => {
       const columnName = rows[0];
       const numHeaderCells = columnName.querySelectorAll('th').length;
       let rowCount = 0;
-    
+
       const heading = `Employee Attendance Report for ${selectedMonthYear}`;
       worksheet.addRow([heading]);
       rowCount += 1;
@@ -413,7 +433,7 @@ const EmployeeAttendance = () => {
         bottom: { style: 'thin' },
         right: { style: 'thin' }
       };
-    
+
       const columnHeaders = Array.from(columnName.querySelectorAll('th')).map(cell => cell.innerText);
       rowCount += 1;
       for (let i = 0; i < numHeaderCells; i++) {
@@ -427,7 +447,7 @@ const EmployeeAttendance = () => {
           right: { style: 'thin' }
         };
       }
-    
+
       for (let i = 1; i < rows.length; i++) {
         const row = rows[i];
         rowCount += 1;
@@ -443,13 +463,13 @@ const EmployeeAttendance = () => {
           };
         });
       }
-    
+
       for (let i = 3; i <= rowCount; i++) {
         for (let j = 1; j <= numHeaderCells; j++) {
           const cellValue = worksheet.getCell(i, j).value;
-          if (cellValue == 'Leave' || cellValue == 'First Half Leave' || cellValue == 'Second Half Leave') {
+          if (cellValue == 'Leave' || cellValue == 'Absent - FHL' || cellValue == 'SHL - Absent') {
             worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ff87cefa' } };
-          } else if (cellValue === 'OD') {
+          } else if (cellValue === 'OD' || cellValue == 'First-Half OD' || cellValue == 'Second-Half OD') {
             worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ff90ee90' } };
           } else if (cellValue === 'WFH') {
             worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffc08b5c' } };
@@ -457,32 +477,40 @@ const EmployeeAttendance = () => {
             worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffd9d9d9' } };
           } else if (cellValue === 'Absent') {
             worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffffff66' } };
-          } else if (cellValue && ((parseInt(cellValue.split(':')[0]) === 9 && parseInt(cellValue.split(':')[1]) > 0) ||
-            parseInt(cellValue.split(':')[0]) > 9 || cellValue.includes('PM'))) {
-            worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffda9694' } };
+          } else {
+            if (!cellValue.includes('SHL') && !cellValue.includes('FHL') && !cellValue.includes('SH(OD)') && !cellValue.includes('FH(OD)')) {
+              if (cellValue && ((parseInt(cellValue.split(':')[0]) === 9 && parseInt(cellValue.split(':')[1]) > 0) ||
+                parseInt(cellValue.split(':')[0]) > 9 || cellValue.includes('PM'))) {
+                worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ffda9694' } };
+              }
+            } else if (cellValue.includes('SHL') || cellValue.includes('FHL')) {
+              worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ff87cefa' } };
+            } else if (cellValue.includes('SH(OD)') || cellValue.includes('FH(OD)')) {
+              worksheet.getCell(i, j).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'ff90ee90' } };
+            }
           }
         }
       }
-    
+
       worksheet.columns.forEach(column => column.width = 22);
       worksheet.getColumn(1).font = { bold: true };
-    
+
       const buffer = await workbook.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `Attendance Report(${selectedMonthYear}).xlsx`;
       document.body.appendChild(a);
       a.click();
-    
+
       URL.revokeObjectURL(url);
       document.body.removeChild(a);
     }
   };
   //#end region
-  
+
 
 
   return (
@@ -537,7 +565,7 @@ const EmployeeAttendance = () => {
               }}>
               <CTable
                 align="middle"
-                style={{ minWidth: 'max-content', border: '1px solid #000'}}
+                style={{ minWidth: 'max-content', border: '1px solid #000' }}
                 id='employeeAttendance'
                 className="mb-4 border"
                 hover bordered responsive>
@@ -545,8 +573,8 @@ const EmployeeAttendance = () => {
                   <CTableRow className="bg-body-tertiary text-center">
                     {
                       dateHeaders && dateHeaders.map((headers, index) => (
-                        <CTableHeaderCell key={index} 
-                        style={{ minWidth: '105px' }}>{headers}</CTableHeaderCell>
+                        <CTableHeaderCell key={index}
+                          style={{ minWidth: '105px' }}>{headers}</CTableHeaderCell>
                       ))
                     }
                   </CTableRow>

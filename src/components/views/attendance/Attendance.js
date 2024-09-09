@@ -23,6 +23,7 @@ const Attendance = () => {
     setViewDate(activeStartDate);
   };
 
+  //#region Statistics
   useEffect(() => {
     const fetchDayCount = async () => {
       try {
@@ -46,6 +47,7 @@ const Attendance = () => {
     fetchDayCount();
   }, [viewDate, user?.empid]);
 
+  //#region Calendar
   function formatDate(date) {
     var d = new Date(date),
       month = '' + (d.getMonth() + 1),
@@ -60,54 +62,19 @@ const Attendance = () => {
     return [year, month, day].join('-');
   }
 
-  //#region Calendar Report
-
-  useEffect(() => {
-    const handleCalendarReport = async () => {
-      try {
-        const today = new Date();
-        const firstDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        const lastDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        let startDate, endDate;
-        if ((formatDate(viewDate) == formatDate(today))) {
-          startDate = formatDate(firstDate);
-          endDate = formatDate(lastDate);
-        } else {
-          startDate = formatDate(viewDate);
-          endDate = formatDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0));
-        }
-debugger
-        const response = await axios.get(`${Config.apiUrl}/calendar?username=${user?.username}&startDate=${startDate}&endDate=${endDate}`);
-        const updatedCalendarData = await Promise.all(response.data.data.map(async (record) => {
-          if ((record.time === null) && (new Date(record.date) <= new Date())) {
-            const allAbsent = await checkAllAbsent(record.date);
-            return { ...record, time: allAbsent ? 'OFF' : 'Absent' };
-          }
-          return record;
-        }));
-        setCalendarData(updatedCalendarData);
-      } catch (error) {
-        console.error('Error fetching full report', error);
-      }
-    };
-    handleCalendarReport();
-  }, [viewDate]);
-
+  // Function to check if all are absent
   const checkAllAbsent = async (date) => {
     try {
       const response = await axios.get(`${Config.apiUrl}/absent?date=${date}`);
       return response.data.data;
     } catch (error) {
-      console.error('Error checking all absent', error);
+      console.error("Error checking all absent:", error);
       return false;
     }
   };
-  //#endregion
-
-  //#region Holiday
 
   useEffect(() => {
-    const fetchHolidayRecord = async () => {
+    const fetchData = async () => {
       try {
         const today = new Date();
         const firstDate = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -121,157 +88,130 @@ debugger
           endDate = formatDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0));
         }
 
-        const response = await axios.get(`${Config.apiUrl}/monthHoliday?startDate=${startDate}&endDate=${endDate}`);
-        setHolidays(response.data.data);
-      } catch {
-        console.error("error fetching public holidays.");
+        const [calendarResponse, holidayResponse, leaveResponse, officialDutyResponse] =
+          await Promise.all([
+            axios.get(`${Config.apiUrl}/calendar?empid=${user?.empid}&startDate=${startDate}&endDate=${endDate}`),
+            axios.get(`${Config.apiUrl}/monthHoliday?startDate=${startDate}&endDate=${endDate}`),
+            axios.get(`${Config.apiUrl}/fetch?empid=${user?.empid}&startDate=${startDate}&endDate=${endDate}`),
+            axios.get(`${Config.apiUrl}/fetchOfficialDuty?empid=${user?.empid}&startDate=${startDate}&endDate=${endDate}`),
+          ]);
+
+        const updatedCalendarData = await Promise.all(
+          calendarResponse.data.data.map(async (record) => {
+            if (record.time === null && new Date(record.date) <= new Date()) {
+              const allAbsent = await checkAllAbsent(record.date);
+              return { ...record, time: allAbsent ? "OFF" : "Absent" };
+            }
+            return record;
+          })
+        );
+ 
+        setCalendarData(updatedCalendarData);
+        setHolidays(holidayResponse.data.data);
+        setLeaveRecords(leaveResponse.data.data);
+        setOfficialDuty(officialDutyResponse.data.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
     };
-    fetchHolidayRecord();
-  }, [viewDate]);
-  //#endregion
 
-  //#region Leave
+    fetchData();
+  }, [user?.empid, viewDate]);
 
-  useEffect(() => {
-    const fetchLeaveRecord = async () => {
-      try {
-        const today = new Date();
-        const firstDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        const lastDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        let startDate, endDate;
-        if ((formatDate(viewDate) == formatDate(today))) {
-          startDate = formatDate(firstDate);
-          endDate = formatDate(lastDate);
-        } else {
-          startDate = formatDate(viewDate);
-          endDate = formatDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0));
-        }
-
-        const response = await axios.get(`${Config.apiUrl}/fetch?empname=${user?.name}&startDate=${startDate}&endDate=${endDate}`);
-        setLeaveRecords(response.data.data);
-      } catch {
-        console.error("error fetching leave records.");
-      }
-    };
-    fetchLeaveRecord();
-  }, [user?.name, viewDate]);
-  //#endregion
-
-  //#region Official Duty
-
-  useEffect(() => {
-    const fetchOfficialDuty = async () => {
-      try {
-        const today = new Date();
-        const firstDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        const lastDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        let startDate, endDate;
-        if ((formatDate(viewDate) == formatDate(today))) {
-          startDate = formatDate(firstDate);
-          endDate = formatDate(lastDate);
-        } else {
-          startDate = formatDate(viewDate);
-          endDate = formatDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 0));
-        }
-
-        const response = await axios.get(`${Config.apiUrl}/fetchOfficialDuty?empname=${user?.name}&startDate=${startDate}&endDate=${endDate}`);
-        setOfficialDuty(response.data.data);
-      } catch {
-        console.error("error fetching OD records.");
-      }
-    };
-    fetchOfficialDuty();
-  }, [user?.name, viewDate]);
-  //#endregion
 
   //#region Color Function
 
   const coloredDays = ({ date, view }) => {
-    const formattedDate = date.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    }).replace(/ /g, '-');
-    const record = calendarData.find(item => item.date === formattedDate);
-    const holidayRecord = holidays.find(holiday => holiday.Date === formattedDate);
-    const leaveRecord = leaveRecords.find(record => (
-      new Date(formattedDate) >= new Date(record.FromDate) &&
-      new Date(formattedDate) <= new Date(record.ToDate) && record.Status === 'Approved'));
-    const officialDutyRecord = officialDuty.find(record => (
-      new Date(formattedDate) >= new Date(record.FromDate) &&
-      new Date(formattedDate) <= new Date(record.ToDate)));
+    if (view == 'month') {
+      const formattedDate = date.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      }).replace(/ /g, '-').replace('Sept', 'Sep');
 
-    if (holidayRecord) {
-      return 'holiday';
-    } else if (leaveRecord) {
-      const { FirstHalf, SecondHalf, FromDate, ToDate } = leaveRecord;
-      if (FirstHalf) {
-        if (formattedDate == ToDate) {
-          if (record) {
-            const { time } = record;
-            if (time == null) {
-              return 'firsthalf';
-            } else if (time == 'Absent') {
-              return 'firstAbsent';
-            } else if (time == 'Off'){
-              return 'firstOff';
-            } else if ((parseInt(time.split(':')[0]) < 2 || time.includes('AM'))) {
-              return 'firstPresent';
-            } 
-          } else {
-            return 'firsthalf';
-          }
-        } else {
-          return 'approved';
-        }
-      } else if (SecondHalf) {
-        if (formattedDate == FromDate) {
-          if (record) {
-            const { time } = record;
-            if (time == null) {
-              return 'secondhalf';
-            } else if (time == 'Absent') {
-              return 'secondAbsent';
-            } else if (time == 'Off') {
-              return 'secondOff';
-            } else if ((parseInt(time.split(':')[0]) < 10 && time.includes('AM'))) {
-              return 'secondPresent';
-            } 
-          } else {
-            return 'secondhalf';
-          }
-        } else {
-          return 'approved';
-        }
-      } else {
-        return 'approved';
-      }
-    } else if (officialDutyRecord){
-      const { Mode } = officialDutyRecord;
-      if (Mode == 'official-duty') {
-        return 'official-duty';
-      } else {
-        return 'work-from-home';
-      }
-    } else if (record) {
-      const { time } = record;
-      if (time === 'OFF') {
-        return 'off';
-      } else if (time === 'Absent') {
-        return 'absent';
-      } else if (time == null) {
+      if (!calendarData || !holidays || !leaveRecords || !officialDuty) {
         return '';
-      } else {
-        if ((parseInt(time.split(':')[0]) === 9 && parseInt(time.split(':')[1]) > 0) ||
-          parseInt(time.split(':')[0]) > 9 || time.includes('PM')) {
-          return 'late';
+      }
+
+      const holidayRecord = holidays.find(holiday => holiday.Date === formattedDate);
+
+      const leaveRecord = leaveRecords.find(record => (
+        new Date(formattedDate) >= new Date(record.FromDate) &&
+        new Date(formattedDate) <= new Date(record.ToDate) && record.Status === 'Approved'));
+
+      const officialDutyRecord = officialDuty.find(record => (
+        new Date(formattedDate) >= new Date(record.FromDate) &&
+        new Date(formattedDate) <= new Date(record.ToDate)));
+
+      const record = calendarData.find(item => item.date === formattedDate);
+
+      if (holidayRecord) {
+        return 'holiday';
+      } else if (leaveRecord) {
+        const { FirstHalf, SecondHalf, FromDate, ToDate } = leaveRecord;
+        if (FirstHalf) {
+          if (formattedDate == ToDate) {
+            if (record) {
+              const { time } = record;
+              if (time == null) {
+                return 'firsthalf';
+              } else if (time == 'Absent') {
+                return 'firstAbsent';
+              } else if (time == 'Off') {
+                return 'firstOff';
+              } else if (parseInt(time.split(':')[0]) <= 2 || time.includes('AM')
+                || parseInt(time.split(':')[0]) == 12) {
+                return 'firstPresent';
+              }
+            } else {
+              return 'firsthalf';
+            }
+          } else {
+            return 'approved';
+          }
+        } else if (SecondHalf) {
+          if (formattedDate == FromDate) {
+            if (record) {
+              const { time } = record;
+              if (time == null) {
+                return 'secondhalf';
+              } else if (time == 'Absent') {
+                return 'secondAbsent';
+              } else if (time == 'Off') {
+                return 'secondOff';
+              } else if ((parseInt(time.split(':')[0]) <= 10 && time.includes('AM'))) {
+                return 'secondPresent';
+              }
+            } else {
+              return 'secondhalf';
+            }
+          } else {
+            return 'approved';
+          }
         } else {
-          return 'present';
+          return 'approved';
+        }
+      } else if (officialDutyRecord) {
+        const { Mode } = officialDutyRecord;
+        return Mode === 'official-duty'? 'official-duty': 'work-from-home';
+      } else if (record) {
+        const { time } = record;
+        if (time === 'OFF') {
+          return 'off';
+        } else if (time === 'Absent') {
+          return 'absent';
+        } else if (time == null) {
+          return '';
+        } else {
+          if ((parseInt(time.split(':')[0]) === 9 && parseInt(time.split(':')[1]) > 0) ||
+            parseInt(time.split(':')[0]) > 9 || time.includes('PM')) {
+            return 'late';
+          } else {
+            return 'present';
+          }
         }
       }
     }
-
     return '';
   };
 
