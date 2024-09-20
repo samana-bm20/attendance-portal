@@ -65,8 +65,8 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Troubleshoot',
-    to: '/troubleshoot',
+    name: 'Log',
+    to: '/log',
     icon: <CIcon icon={cilPuzzle} customClassName="nav-icon" />,
   },
   {

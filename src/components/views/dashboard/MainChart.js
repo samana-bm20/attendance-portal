@@ -153,7 +153,7 @@ const MainChart = () => {
       datasets: [
         {
           backgroundColor: ['#adadad', '#E4A11B'],
-          data: [leavesUsed, (paidLeaves - leavesUsed) > 0 ? paidLeaves - leavesUsed : 0],
+          data: [leavesUsed ? leavesUsed : 0, (paidLeaves - leavesUsed) > 0 ? paidLeaves - leavesUsed : 0],
         },
       ],
     },

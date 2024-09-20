@@ -63,19 +63,7 @@ const Monthly = () => {
         }
     };
 
-    // const updatedAttendanceLeaveData = (attendanceRecord, leaveRecord) => {
-    //     debugger
-    //     return attendanceRecord.map((record) => {
-    //         const leaves = leaveRecord.find((leave) => record.date >= leave.FromDate && record.date <= leave.ToDate);
-    //         if (leaves) {
-    //             return { ...record, time: leaves.Status === 'Approved' ? 'Leave' : leaves.Status };
-    //         }
-    //         return record;
-    //     });
-    // };
-
     const updatedAttendanceLeaveData = (attendanceRecord, leaveRecord) => {
-        debugger
         return attendanceRecord.map((record) => {
             const leave = leaveRecord.find((leave) => record.date >= leave.FromDate && record.date <= leave.ToDate);
             

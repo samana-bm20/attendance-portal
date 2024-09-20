@@ -8,7 +8,7 @@ const Employee = React.lazy(() => import('../views/employee/Employee'))
 const OfficialDutyWFH = React.lazy(() => import('../views/od-wfh/OfficialDuty')) 
 const PersonalDetails = React.lazy(() => import('../views/personalDetails/PersonalDetails')) 
 const Report = React.lazy(() => import('../views/report/Report')) 
-const Troubleshoot = React.lazy(() => import('../views/troubleshoot/Troubleshoot')) 
+const Log = React.lazy(() => import('../views/log/Log')) 
 const Holidays = React.lazy(()=>import('../views/Holiday/Holiday'))
 
 const admin = [
@@ -21,7 +21,7 @@ const admin = [
   { path: '/od-wfh', name: 'Official Duty / WFH', element: OfficialDutyWFH },
   { path: '/info', name: 'Personal Details', element: PersonalDetails },
   { path: '/report', name: 'Summary Report', element: Report },
-  { path: '/troubleshoot', name: 'Troubleshoot', element: Troubleshoot },
+  { path: '/log', name: 'Log', element: Log },
   { path: '/Holidays', name: 'Holidays', element: Holidays },
 ]
 

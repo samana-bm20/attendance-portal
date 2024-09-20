@@ -66,14 +66,14 @@ export const AppSidebarNav = ({ items }) => {
           items.map((item, index) => (
             item.name !== 'Employee Data' &&
               item.name !== 'Employee Attendance' &&
-              item.name !== 'Troubleshoot' &&
+              item.name !== 'Log' &&
               item.name !== 'Analytics' ? navItem(item, index) : null
           ))
         }
         {user?.userType === 3 && items &&
           items.map((item, index) => (
             item.name !== 'Employee Data' &&
-              item.name !== 'Troubleshoot' &&
+              item.name !== 'Log' &&
               item.name !== 'Analytics' ? navItem(item, index) : null
           ))
         }
